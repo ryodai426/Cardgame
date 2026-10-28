@@ -227,7 +227,7 @@ const CARDS = {
     draw: async x => { x.p.mana = Math.max(0, x.p.mana - 1); log(`${pname(x.p)}は狂気に蝕まれマナ-1`); } },
 
   // ---- 剣士アレン ----
-  gale: { hero: 'allen', name: '疾風斬', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '🌪️', text: '【使用時】このターン既に攻撃していればATK+2',
+  gale: { hero: 'allen', name: '疾風斬', type: 'attack', cost: 2, atk: 4, def: 2, dc: 0, price: 2, art: '🌪️', text: '【使用時】このターン既に攻撃していればATK+2',
     play: async x => { if (x.p.attacksThisTurn >= 1) x.atk += 2; } },
   step: { hero: 'allen', name: '踏み込み', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '👣', text: '【使用時】次の攻撃のATK+1',
     play: async x => { x.p.nextAtkPending = (x.p.nextAtkPending || 0) + 1; } },
@@ -369,20 +369,27 @@ const CARDS = {
   titan: { hero: 'mech', name: '巨神兵器', type: 'attack', cost: 4, atk: 6, def: 2, dc: 0, price: 7, art: '🦾', text: '【部品】合成するとコスト-2', part: { cost: 2 } },
 
   // ---- 人狼ルガル（奇数ラウンド＝満月／偶数ラウンド＝新月） ----
-  claw: { hero: 'wolf', moon: true, name: '獣の爪', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '🐾', text: '【満月】ATK+2\n【新月】1枚引く',
-    play: async x => { if (fullMoon(x.p)) x.atk += 2; else await draw(x.p, 1); } },
-  lurk: { hero: 'wolf', moon: true, name: '月影の潜伏', type: 'skill', cost: 0, def: 2, dc: 0, price: 2, art: '🌑', text: '【満月】コイン+1\n【新月】1枚引く',
-    play: async x => { if (fullMoon(x.p)) gainCoins(x.p, 1); else await draw(x.p, 1); } },
-  howl: { hero: 'wolf', moon: true, name: '遠吠え', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🌕', text: '【満月】このターンの攻撃全てATK+1\n【新月】相手の手札を1枚まで追加で【威圧】',
-    play: async x => { if (fullMoon(x.p)) x.p.turnAtk += 1; else await sealMore(x.p, x.o, 1); } },
-  beastguard: { hero: 'wolf', moon: true, name: '獣の守り', type: 'attack', cost: 1, atk: 1, def: 3, dc: 0, price: 3, art: '🛡️', text: '【防御時・新月】DEF+2\n【防御時・満月】攻撃者に1ダメージ',
-    defend: async x => { if (fullMoon(x.p)) await damage(x.o, 1, '獣の守り'); else { x.a.atk -= 2; log('獣の守り：DEF+2'); } } },
-  moonfang: { hero: 'wolf', moon: true, name: '月下の牙', type: 'attack', cost: 3, atk: 4, def: 1, dc: 0, price: 5, art: '🦷', text: '【満月】ヒット時 追加で2ダメージ\n【新月】使用時 コイン+2',
-    play: async x => { if (!fullMoon(x.p)) gainCoins(x.p, 2); }, hit: async x => { if (fullMoon(x.p)) await damage(x.o, 2, '月下の牙'); } },
-  lunacy: { hero: 'wolf', moon: true, name: '狂月の乱舞', type: 'attack', cost: 4, atk: 5, def: 1, dc: 0, price: 6, art: '🌝', text: '【満月】ATK+4\n【新月】1枚引く',
-    play: async x => { if (fullMoon(x.p)) x.atk += 4; else await draw(x.p, 1); } },
-  bloodhunt: { hero: 'wolf', moon: true, name: '血月の狩り', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🔴', text: '【満月】ヒット時 HP2回復\n【新月】使用時 次の攻撃ATK+2',
-    play: async x => { if (!fullMoon(x.p)) x.p.nextAtkPending += 2; }, hit: async x => { if (fullMoon(x.p)) await heal(x.p, 2); } },
+  // moon: 'full'＝満月型（満月で強く、新月では弱くなる）／'new'＝新月型（その逆）
+  claw: { hero: 'wolf', moon: 'full', name: '獣の爪', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '🐾', text: '【満月】ATK+2\n【新月】ATK-1',
+    play: async x => { x.atk += fullMoon(x.p) ? 2 : -1; } },
+  lurk: { hero: 'wolf', moon: 'new', name: '月影の潜伏', type: 'skill', cost: 0, def: 2, dc: 0, price: 2, art: '🌑', text: '【新月】2枚引く\n【満月】効果なし',
+    play: async x => { if (!fullMoon(x.p)) await draw(x.p, 2); else log('満月の下では潜めない…'); } },
+  howl: { hero: 'wolf', moon: 'full', name: '遠吠え', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🌕', text: '【満月】このターンの攻撃全てATK+1\n【新月】HPを1失う',
+    play: async x => { if (fullMoon(x.p)) x.p.turnAtk += 1; else await loseHp(x.p, 1, '遠吠え'); } },
+  beastguard: { hero: 'wolf', moon: 'new', name: '獣の守り', type: 'attack', cost: 1, atk: 1, def: 3, dc: 0, price: 3, art: '🛡️', text: '【防御時・新月】DEF+3\n【防御時・満月】DEF-1',
+    defend: async x => { if (fullMoon(x.p)) { x.a.atk += 1; log('満月で守りが緩む：DEF-1'); } else { x.a.atk -= 3; log('獣の守り：DEF+3'); } } },
+  moonfang: { hero: 'wolf', moon: 'full', name: '月下の牙', type: 'attack', cost: 3, atk: 4, def: 1, dc: 0, price: 5, art: '🦷', text: '【満月】ヒット時 追加で2ダメージ\n【新月】ATK-2',
+    play: async x => { if (!fullMoon(x.p)) x.atk -= 2; }, hit: async x => { if (fullMoon(x.p)) await damage(x.o, 2, '月下の牙'); } },
+  lunacy: { hero: 'wolf', moon: 'full', name: '狂月の乱舞', type: 'attack', cost: 4, atk: 5, def: 1, dc: 0, price: 6, art: '🌝', text: '【満月】ATK+4\n【新月】自分に2ダメージ',
+    play: async x => { if (fullMoon(x.p)) x.atk += 4; else await loseHp(x.p, 2, '狂月の乱舞'); } },
+  bloodhunt: { hero: 'wolf', moon: 'new', name: '闇夜の狩り', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🌚', text: '【新月】次の攻撃ATK+3。1枚引く\n【満月】ATK-1',
+    play: async x => { if (!fullMoon(x.p)) { x.p.nextAtkPending += 3; await draw(x.p, 1); } else x.atk -= 1; } },
+  den: { hero: 'wolf', moon: 'new', heal: true, name: '新月の隠れ家', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🏚️', text: '【新月】HP3回復。1枚引く\n【満月】HP1回復',
+    play: async x => { if (!fullMoon(x.p)) { await heal(x.p, 3); await draw(x.p, 1); } else await heal(x.p, 1); } },
+  eclipse: { hero: 'wolf', moon: 'new', name: '月蝕の牙', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🌘', text: '【新月】使用時 相手の手札を1枚まで威圧。ヒット時 コイン+2\n【満月】ATK-1',
+    play: async x => { if (!fullMoon(x.p)) await sealMore(x.p, x.o, 1); else x.atk -= 1; }, hit: async x => { if (!fullMoon(x.p)) gainCoins(x.p, 2); } },
+  silverrage: { hero: 'wolf', moon: 'full', name: '銀月の狂乱', type: 'attack', cost: 4, atk: 6, def: 1, dc: 0, price: 6, art: '🌖', text: '【満月】ATK+1。ヒット時 HP2回復\n【新月】ATK-3',
+    play: async x => { x.atk += fullMoon(x.p) ? 1 : -3; }, hit: async x => { if (fullMoon(x.p)) await heal(x.p, 2); } },
 
   // ---- 森の射手リーフィア（エルフ） ----
   elfarcher: { hero: 'elf', elf: true, name: 'エルフの射手', type: 'attack', cost: 1, atk: 3, def: 1, dc: 0, price: 2, art: '🏹', text: '【ヒット時】コイン+1', hit: async x => gainCoins(x.p, 1) },
@@ -396,8 +403,8 @@ const CARDS = {
     play: async x => { x.p.discard = flatCards(x.p.discard); const es = x.p.discard.filter(c => D(c).elf); if (!es.length) { log('戻せるエルフがいない'); return; }
       const s = await choose({ who: x.p, title: '手札に戻すエルフ', cards: es, min: 1, max: 1, ai: 'best' }); s.forEach(c => { removeFrom(x.p.discard, c); x.p.hand.push(c); }); render(); } },
   elfkeeper: { hero: 'elf', elf: true, name: '森の守り手', type: 'attack', cost: 1, atk: 2, def: 4, dc: 0, price: 4, art: '🌳', text: '【防御時】1枚引く', defend: async x => draw(x.p, 1) },
-  elfrain: { hero: 'elf', elf: true, name: '千の矢', type: 'attack', cost: 3, atk: 2, def: 1, dc: 0, price: 6, art: '🌧️', text: '【使用時】このターン先に使ったエルフ1枚につきATK+2（最大+8）',
-    play: async x => { x.atk += Math.min(8, (x.p.elvesThisTurn - 1) * 2); } },
+  elfrain: { hero: 'elf', elf: true, name: '千の矢', type: 'attack', cost: 3, atk: 2, def: 1, dc: 0, price: 6, art: '🌧️', text: '【使用時】このターン先に使ったエルフ1枚につきATK+2（最大+6）',
+    play: async x => { x.atk += Math.min(6, (x.p.elvesThisTurn - 1) * 2); } },
   elfrider: { hero: 'elf', elf: true, name: 'エルフの騎兵', type: 'attack', cost: 2, atk: 4, def: 2, dc: 0, price: 5, art: '🦌', text: '【ヒット時】マナ+1', hit: async x => gainMana(x.p, 1) },
 
   // ---- ファラオ ネフェルカ（風化：使用後に破棄される） ----
@@ -422,55 +429,136 @@ const CARDS = {
   trike: { hero: 'dino', name: 'トリケラトプス', type: 'summon', cost: 3, def: 2, dc: 0, price: 5, art: '🦏', text: '【召喚】恐竜 ❤6 ⚔3 攻撃💧2\n攻撃ヒット時：相手のマナ-1',
     dino: { hp: 6, atk: 3, acost: 2, hit: async x => { x.o.mana = Math.max(0, x.o.mana - 1); log(`${pname(x.o)}のマナ-1`); } } },
   stego: { hero: 'dino', name: 'ステゴサウルス', type: 'summon', cost: 3, def: 2, dc: 0, price: 4, art: '🦕', dino: { hp: 6, atk: 3, acost: 2, thorns: true }, text: '【召喚】恐竜 ❤6 ⚔3 攻撃💧2\n棘：攻撃されると攻撃者に1ダメージ' },
-  brachio: { hero: 'dino', name: 'ブラキオサウルス', type: 'summon', cost: 4, def: 2, dc: 0, price: 6, art: '🦒', dino: { hp: 10, atk: 2, acost: 2, taunt: true }, text: '【召喚】恐竜 ❤10 ⚔2 攻撃💧2\n守護：相手の攻撃はこの恐竜を狙わなければならない' },
+  brachio: { hero: 'dino', name: 'ブラキオサウルス', type: 'summon', cost: 4, def: 2, dc: 0, price: 6, art: '🦒', dino: { hp: 8, atk: 2, acost: 2, taunt: true }, text: '【召喚】恐竜 ❤8 ⚔2 攻撃💧2\n守護：相手の攻撃はこの恐竜を狙わなければならない' },
   trex: { hero: 'dino', name: 'ティラノサウルス', type: 'summon', cost: 5, def: 1, dc: 0, price: 8, art: '🦖', dino: { hp: 8, atk: 6, acost: 4 }, text: '【召喚】恐竜 ❤8 ⚔6 攻撃💧4' },
   huntcall: { hero: 'dino', needReady: true, name: '狩りの号令', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '📯', text: '【使用時】このターン、恐竜の攻撃全てATK+2', play: async x => { x.p.dinoAtk += 2; } },
   fossil: { hero: 'dino', name: '化石発掘', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '🦴', text: '【使用時】捨て札の召喚カード1枚を手札に戻す',
     play: async x => { x.p.discard = flatCards(x.p.discard); const ss = x.p.discard.filter(c => D(c).type === 'summon'); if (!ss.length) { log('化石が見つからない'); return; }
       const s = await choose({ who: x.p, title: '手札に戻す召喚カード', cards: ss, min: 1, max: 1, ai: 'best' }); s.forEach(c => { removeFrom(x.p.discard, c); x.p.hand.push(c); }); render(); } },
+
+  // ---- 炎の魔術師イグニス（burn＝使うと自分にもダメージ） ----
+  firebolt: { hero: 'pyro', burn: 1, name: '火の玉', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '💥', text: '【使用時】相手に2ダメージ（防御不能）。自分に1ダメージ',
+    play: async x => { await damage(x.o, 2, '火の玉'); await selfBurn(x.p, 1, '火の玉'); } },
+  cinder: { hero: 'pyro', burn: 1, name: '火の粉', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '✨', text: '【使用時】相手に1ダメージ（防御不能）。自分に1ダメージ',
+    play: async x => { await damage(x.o, 1, '火の粉'); await selfBurn(x.p, 1, '火の粉'); } },
+  soulburn: { hero: 'pyro', burn: 2, name: '燃え盛る魂', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '❤️‍🔥', text: '【使用時】マナ+2。自分に2ダメージ',
+    play: async x => { gainMana(x.p, 2); await selfBurn(x.p, 2, '燃え盛る魂'); } },
+  flamewall: { hero: 'pyro', burn: 1, name: '炎の壁', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🧱', text: '【防御時】攻撃者に2ダメージ。自分に1ダメージ',
+    defend: async x => { await damage(x.o, 2, '炎の壁'); await selfBurn(x.p, 1, '炎の壁'); } },
+  flameblade: { hero: 'pyro', burn: 1, name: '炎の剣', type: 'attack', cost: 2, atk: 4, def: 1, dc: 0, price: 4, art: '🗡️', text: '【使用時】自分に1ダメージ', play: async x => selfBurn(x.p, 1, '炎の剣') },
+  flamethrower: { hero: 'pyro', burn: 2, name: '火炎放射', type: 'attack', cost: 3, atk: 7, def: 1, dc: 0, price: 5, art: '🔥', text: '【使用時】自分に2ダメージ', play: async x => selfBurn(x.p, 2, '火炎放射') },
+  blast: { hero: 'pyro', burn: 3, name: '大爆炎', type: 'skill', cost: 3, def: 1, dc: 0, price: 6, art: '🎆', text: '【使用時】相手に5ダメージ（防御不能）。自分に3ダメージ',
+    play: async x => { await damage(x.o, 5, '大爆炎'); await selfBurn(x.p, 3, '大爆炎'); } },
+  rebirth: { hero: 'pyro', heal: true, name: '灰からの再生', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '🐦‍🔥', text: '【使用時】HP4回復', play: async x => heal(x.p, 4) },
+  ifrit: { hero: 'pyro', burn: 4, name: 'イフリート召喚', type: 'attack', cost: 5, atk: 10, def: 1, dc: 0, price: 8, art: '👹', text: '【使用時】自分に4ダメージ', play: async x => selfBurn(x.p, 4, 'イフリート') },
+
+  // ---- 追加カード（各ヒーロー3種） ----
+  iai: { hero: 'allen', name: '居合', type: 'attack', cost: 2, atk: 2, def: 2, dc: 0, price: 4, art: '🎐', text: '【使用時】このターン既に攻撃した回数だけATK+（最大+3）',
+    play: async x => { x.atk += Math.min(3, x.p.attacksThisTurn); } },
+  parry: { hero: 'allen', name: '受け太刀', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🤺', text: '【防御時】次の自分のターン最初の攻撃ATK+2',
+    defend: async x => { x.p.storedAtk += 2; } },
+  swordance: { hero: 'allen', name: '剣舞', type: 'skill', cost: 2, def: 1, dc: 0, price: 5, art: '💃', text: '【使用時】2枚引く。このターンの攻撃全てATK+1',
+    play: async x => { await draw(x.p, 2); x.p.turnAtk += 1; } },
+  cursechain: { hero: 'garud', name: '呪縛の鎖', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 5, art: '⛓️', text: '【ヒット時】相手の捨て札に「血の呪い」を1枚加える',
+    hit: async x => addCard(x.o, 'bloodcurse', 'discard') },
+  bloodprice: { hero: 'garud', name: '血の代償', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🩹', text: '【使用時】HPを2失い、2枚引く',
+    play: async x => { await loseHp(x.p, 2, '血の代償'); await draw(x.p, 2); } },
+  berserkroar: { hero: 'garud', name: '狂戦士の咆哮', type: 'attack', cost: 3, atk: 5, def: 1, dc: 0, price: 6, art: '🗯️', text: '【使用時】このターンの怒りの数だけさらにATK+（怒りが2倍で乗る）',
+    play: async x => { x.atk += x.p.rageNow; } },
+  bloodblade2: { hero: 'carmilla', name: '血の刃', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '🔪', text: '【ヒット時】HP1回復。コイン+1',
+    hit: async x => { await heal(x.p, 1); gainCoins(x.p, 1); } },
+  thrall: { hero: 'carmilla', name: '眷属召喚', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '🧛', text: '【使用時】HPを2失い、このターンの攻撃全てATK+2',
+    play: async x => { await loseHp(x.p, 2, '眷属召喚'); x.p.turnAtk += 2; } },
+  nightembrace: { hero: 'carmilla', name: '夜霧の抱擁', type: 'attack', cost: 3, atk: 4, def: 2, dc: 0, price: 5, art: '🌃', text: '【使用時】自分のHPが最大の半分以下ならATK+3',
+    play: async x => { if (x.p.hp <= x.p.maxHp / 2) x.atk += 3; } },
+  icelance: { hero: 'merla', name: '氷の槍', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '🧊', text: '【ヒット時】相手のマナ-1',
+    hit: async x => { x.o.mana = Math.max(0, x.o.mana - 1); log(`${pname(x.o)}のマナ-1`); } },
+  manaspring: { hero: 'merla', name: '魔力の泉', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '⛲', text: '【使用時】マナ+1。このターン既にスキルを使っていれば1枚引く',
+    play: async x => { gainMana(x.p, 1); if (x.p.skillsThisTurn >= 1) await draw(x.p, 1); } },
+  chaincast: { hero: 'merla', name: '連鎖詠唱', type: 'skill', cost: 2, def: 1, dc: 0, price: 5, art: '🌀', text: '【使用時】このターン使ったスキルの枚数（これを含む）だけ相手にダメージ（防御不能・最大3）',
+    play: async x => damage(x.o, Math.min(3, x.p.skillsThisTurn + 1), '連鎖詠唱') },
+  piggybank: { hero: 'chuta', name: '貯金箱', type: 'skill', cost: 1, def: 3, dc: 0, price: 3, art: '🐷', text: '【使用時】コイン+1。次の自分のターン開始時にコイン+3',
+    play: async x => { gainCoins(x.p, 1); x.p.investNext += 3; } },
+  goldbar: { hero: 'chuta', name: '金の延べ棒', type: 'attack', cost: 2, atk: 2, def: 2, dc: 0, price: 5, art: '🧈', text: '【使用時】所持コイン3枚につきATK+1（最大+4）',
+    play: async x => { x.atk += Math.min(4, Math.floor(x.p.coins / 3)); } },
+  bargain: { hero: 'chuta', name: '大バーゲン', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '🛍️', text: '【使用時】このターン、道具屋の価格がさらに-2',
+    play: async x => { x.p.discount += 2; log('大バーゲン開催！'); } },
+  crawlchaos: { hero: 'kuru', name: '這い寄る混沌', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 6, art: '🌑', text: '【ヒット時】相手の手札を1枚選んで破棄する',
+    hit: async x => { if (!x.o.hand.length) return; const s = await choose({ who: x.p, title: `${pname(x.o)}の手札から破棄するカード`, cards: x.o.hand, min: 1, max: 1, confirm: '破棄させる', ai: 'oppBest' }); s.forEach(c => { removeFrom(x.o.hand, c); trash(x.o, c); }); render(); } },
+  abyssprayer: { hero: 'kuru', name: '深淵の祈り', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '🙇', text: '【使用時】深淵+2。1枚引く',
+    play: async x => { x.p.abyss += 2; log('深淵+2'); await draw(x.p, 1); } },
+  oldone: { hero: 'kuru', name: '旧支配者の触腕', type: 'attack', cost: 3, atk: 4, def: 2, dc: 0, price: 5, art: '🦑', text: '【使用時】深淵を3消費してもよい。消費したらATK+4',
+    play: async x => { if (x.p.abyss < 3) return; const v = await chooseOption({ who: x.p, title: '深淵を3消費してATK+4？', options: [{ label: '消費する（深淵3）', value: 1 }, { label: 'しない', value: 0 }], ai: 'first' }); if (v) { x.p.abyss -= 3; x.atk += 4; } } },
+  rockwall: { hero: 'golem', name: '岩壁', type: 'attack', cost: 1, atk: 1, def: 5, dc: 1, price: 3, art: '🧱', text: '【防御時】HP1回復', defend: async x => heal(x.p, 1) },
+  tremor: { hero: 'golem', name: '地響き', type: 'attack', cost: 3, atk: 4, def: 3, dc: 0, price: 5, art: '💥', text: '【ヒット時】相手の手札を1枚まで【石化】',
+    hit: async x => sealMore(x.p, x.o, 1, true) },
+  giantstep: { hero: 'golem', name: '巨人の歩み', type: 'skill', cost: 2, def: 2, dc: 0, price: 4, art: '🦶', text: '【使用時】HP2回復。次の自分のターン最初の攻撃ATK+3',
+    play: async x => { await heal(x.p, 2); x.p.storedAtk += 3; } },
+  holylance: { hero: 'angel', name: '聖なる槍', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '🔱', text: '【使用時】聖なる盾が2以上あれば、盾を2消費してATK+3',
+    play: async x => { if (x.p.shield >= 2) { x.p.shield -= 2; x.atk += 3; log('聖なる盾を力に変えた（ATK+3）', 'holy'); } } },
+  healinglight: { hero: 'angel', heal: true, name: '癒しの光', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '💡', text: '【使用時】HP2回復。聖なる盾+1',
+    play: async x => { await heal(x.p, 2); gainShield(x.p, 1); } },
+  halo: { hero: 'angel', name: '光輪の守り', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 4, art: '😇', text: '【防御時】聖なる盾+3', defend: async x => gainShield(x.p, 3) },
+  bolt: { hero: 'mech', name: 'ボルト', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🔩', text: '【使用時】1枚引く\n【部品】合成するとATK+1', part: { atk: 1 }, play: async x => draw(x.p, 1) },
+  rocketpunch: { hero: 'mech', name: 'ロケットパンチ', type: 'attack', cost: 3, atk: 5, def: 1, dc: 0, price: 5, art: '🚀', text: '【部品】合成するとATK+2', part: { atk: 2 } },
+  drone: { hero: 'mech', heal: true, name: '修理ドローン', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🛸', text: '【使用時】HP2回復。コイン+1', play: async x => { await heal(x.p, 2); gainCoins(x.p, 1); } },
+  elfhealer: { hero: 'elf', elf: true, name: 'エルフの癒し手', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🌿', text: '【使用時】HP1回復。1枚引く', play: async x => { await heal(x.p, 1); await draw(x.p, 1); } },
+  elfambush: { hero: 'elf', elf: true, name: 'エルフの伏兵', type: 'attack', cost: 1, atk: 2, def: 2, dc: 0, price: 4, art: '🍂', text: '【構え】相手の攻撃がヒットした時、これを捨て攻撃者に2ダメージ',
+    stance: { on: 'hit', fn: async x => { discardFromHand(x.p, x.card); log(`${pname(x.p)}の【構え】エルフの伏兵！`); await damage(x.o, 2, 'エルフの伏兵'); } } },
+  elfchorus: { hero: 'elf', name: '森の大合唱', type: 'skill', cost: 2, def: 1, dc: 0, price: 6, art: '🎼', text: '【使用時】このターン使ったエルフ1枚につき相手に1ダメージ（防御不能・最大4）',
+    play: async x => { const n = Math.min(4, x.p.elvesThisTurn); if (n) await damage(x.o, n, '森の大合唱'); else log('エルフがまだいない…'); } },
+  deadbook: { hero: 'pharaoh', name: '死者の書', type: 'skill', cost: 1, def: 1, dc: 0, price: 5, art: '📜', text: '【使用時】このゲームで風化した自分のカード1枚を手札に戻す',
+    play: async x => { if (!x.p.weathered.length) { log('戻せる風化カードがない'); return; } const s = await choose({ who: x.p, title: '死者の書：蘇らせるカード', cards: x.p.weathered, min: 1, max: 1, ai: 'best' }); s.forEach(c => { removeFrom(x.p.weathered, c); removeFrom(G.trash, c); x.p.hand.push(c); log(`「${D(c).name}」が蘇った`); }); render(); } },
+  uraeus: { hero: 'pharaoh', name: '蛇の冠', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🐍', text: '【ヒット時】相手の手札を1枚まで追加で【威圧】', hit: async x => sealMore(x.p, x.o, 1) },
+  goldcoffin: { hero: 'pharaoh', weather: true, name: '黄金の棺', type: 'skill', cost: 0, def: 4, dc: 1, price: 3, art: '⚱️', text: '【使用時】コイン+2\n【風化】（防御に使った時は風化しない）', play: async x => gainCoins(x.p, 2) },
+  ankylo: { hero: 'dino', name: 'アンキロサウルス', type: 'summon', cost: 3, def: 2, dc: 0, price: 4, art: '🐢', dino: { hp: 5, atk: 1, acost: 1, taunt: true }, text: '【召喚】恐竜 ❤5 ⚔1 攻撃💧1\n守護：相手の攻撃はこの恐竜を狙わなければならない' },
+  spino: { hero: 'dino', name: 'スピノサウルス', type: 'summon', cost: 4, def: 1, dc: 0, price: 6, art: '🐊', text: '【召喚】恐竜 ❤6 ⚔5 攻撃💧3\n攻撃ヒット時：追加で1ダメージ',
+    dino: { hp: 6, atk: 5, acost: 3, hit: async x => damage(x.o, 1, 'スピノサウルス') } },
+  wakeroar: { hero: 'dino', needTired: true, name: '目覚めの咆哮', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '📢', text: '【使用時】待機中の恐竜1体を、このターン攻撃できるようにする',
+    play: async x => { const tired = x.p.field.filter(d => d.exhausted); if (!tired.length) return; const dn = tired.length === 1 ? tired[0] : await chooseOption({ who: x.p, title: '目覚めさせる恐竜', options: tired.sort((a, b) => b.atk - a.atk).map(d => ({ label: `${d.art}${d.name}`, value: d })), ai: 'first' }); dn.exhausted = false; log(`${dn.name}が目を覚ました！`); render(); } },
 };
 const NEUTRAL = ['sharp', 'heavy', 'thief', 'ironshield', 'thorn', 'incinerate', 'crystal', 'breath', 'counter', 'mikiri', 'goldbag', 'hammer', 'roar', 'potion', 'axe', 'reveal'];
 
 // ================= heroes =================
 // draft: ターン開始時に3枚提示される候補（キャラ独自の低コストカード中心）
 const HEROES = {
-  allen: { name: '剣士アレン', short: 'アレン', title: '王道の剣士', art: '⚔️', color: '#4a9cff', hp: 22, diff: '★☆☆', sig: 'gale',
-    pool: ['cross', 'seigan', 'ougi', 'hone', 'tsubame'], draft: ['gale', 'step', 'zanshin', 'hone', 'cross'],
+  allen: { name: '剣士アレン', short: 'アレン', title: '王道の剣士', art: '⚔️', color: '#4a9cff', hp: 24, diff: '★☆☆', sig: 'gale',
+    pool: ['cross', 'seigan', 'ougi', 'hone', 'tsubame', 'iai', 'parry', 'swordance'], draft: ['gale', 'step', 'zanshin', 'hone', 'cross'],
     passive: '【連撃の型】1ターン中、2回目以降の攻撃はATK+2。',
     style: '攻撃を重ねるほど強くなる王道型。癖がなく初心者向け。',
     actives: [{ name: '構え直し', cost: 'なし', text: '手札1枚を捨て、1枚引く（1ターン1回）',
       can: p => p.hand.length > 0 && !p.used.a0,
       use: async p => { const s = await choose({ who: p, title: '構え直し：捨てるカード', cards: p.hand, min: 1, max: 1, cancelable: true, ai: 'worst' }); if (!s) return; p.used.a0 = 1; discardFromHand(p, s[0]); await draw(p, 1); } }] },
-  garud: { name: '呪われし狂戦士ガルド', short: 'ガルド', title: '呪いを喰らう魔剣士', art: '👹', color: '#e0443a', hp: 24, diff: '★★☆', sig: 'bloodblade',
-    pool: ['demonblade', 'frenzy', 'thirst', 'grudge', 'ruin'], draft: ['bloodblade', 'oath', 'cursefeed', 'grudge', 'thirst'],
+  garud: { name: '呪われし狂戦士ガルド', short: 'ガルド', title: '呪いを喰らう魔剣士', art: '👹', color: '#e0443a', hp: 23, diff: '★★☆', sig: 'bloodblade',
+    pool: ['demonblade', 'frenzy', 'thirst', 'grudge', 'ruin', 'cursechain', 'bloodprice', 'berserkroar'], draft: ['bloodblade', 'oath', 'cursefeed', 'grudge', 'thirst'],
     passive: '【怒り】呪いを引くたび怒り+1。次の自分のターン中、全ての攻撃ATK+怒り。',
     style: '超火力の代償に自分のデッキへ「血の呪い」を埋める。HP最大のハイリスク型。',
     actives: [{ name: '血の解放', cost: 'HP3', text: 'HPを3失い、このターンの攻撃全てATK+2（1ターン1回）',
       can: p => p.hp > 3 && !p.used.a0,
       use: async p => { p.used.a0 = 1; await loseHp(p, 3, '血の解放'); p.turnAtk += 2; log('血の解放！ 攻撃ATK+2'); } }] },
-  carmilla: { name: 'ヴァンパイア カーミラ', short: 'カーミラ', title: '夜を統べる真祖', art: '🦇', color: '#b04ad8', hp: 20, diff: '★★☆', sig: 'fang',
-    pool: ['bats', 'feast', 'mist', 'charm', 'night'], draft: ['fang', 'bloodrop', 'littlebite', 'night'],
+  carmilla: { name: 'ヴァンパイア カーミラ', short: 'カーミラ', title: '夜を統べる真祖', art: '🦇', color: '#b04ad8', hp: 21, diff: '★★☆', sig: 'fang',
+    pool: ['bats', 'feast', 'mist', 'charm', 'night', 'bloodblade2', 'thrall', 'nightembrace'], draft: ['fang', 'bloodrop', 'littlebite', 'night'],
     passive: '【吸血】攻撃がヒットするたびHP1回復。',
     style: '血を払ってマナを生み、吸血で回復しながら押し切る。相手の手札を奪う魅了も。',
     actives: [{ name: '血の契約', cost: 'HP2', text: 'HPを2失い、マナ+2（1ターン1回）',
       can: p => p.hp > 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; await loseHp(p, 2, '血の契約'); gainMana(p, 2); } }] },
   merla: { name: '大魔導士メルラ', short: 'メルラ', title: '禁書を読む魔女', art: '🔮', color: '#3fd0c9', hp: 15, diff: '★★☆', sig: 'missile',
-    pool: ['fireball', 'chain', 'barrier', 'tome', 'forbidden', 'meteor'], draft: ['missile', 'spark', 'meditate', 'tome', 'barrier'],
+    pool: ['fireball', 'chain', 'barrier', 'tome', 'forbidden', 'meteor', 'icelance', 'manaspring', 'chaincast'], draft: ['missile', 'spark', 'meditate', 'tome', 'barrier'],
     passive: '【魔力共鳴】1ターン中、2枚目以降のスキルを使うたび相手に1ダメージ。',
     style: '防御不能の呪文で削る。打たれ弱いのでドローで手札を確保しよう。',
     actives: [{ name: '魔力循環', cost: 'マナ1', text: '1枚引く（1ターン1回）',
       can: p => p.mana >= 1 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 1; await draw(p, 1); } }] },
-  chuta: { name: '商人ネズミ チュー太', short: 'チュー太', title: '金で殴る小動物', art: '🐭', color: '#f2c230', hp: 19, diff: '★★★', sig: 'stash',
-    pool: ['cointhrow', 'bribe', 'merc', 'goldshield', 'invest', 'stock'], draft: ['stash', 'pickup', 'haggle', 'stock', 'invest'],
-    passive: '【商才】ターン開始時のコイン+1（計+2）。道具屋の価格-1。【財力】コインを5枚以上持っていれば全ての攻撃ATK+1。',
+  chuta: { name: '商人ネズミ チュー太', short: 'チュー太', title: '金で殴る小動物', art: '🐭', color: '#f2c230', hp: 23, diff: '★★★', sig: 'stash',
+    pool: ['cointhrow', 'bribe', 'merc', 'goldshield', 'invest', 'stock', 'piggybank', 'goldbar', 'bargain'], draft: ['stash', 'pickup', 'haggle', 'stock', 'invest'],
+    passive: '【商才】ターン開始時のコイン+1（計+2）。道具屋の価格-1。【財力】コインを4枚以上持っていれば全ての攻撃ATK+1。',
     style: 'コインを稼ぎ、買い、投げる。HPは低いが経済力は随一。',
     actives: [{ name: '両替', cost: 'コイン3', text: 'コイン3を払い、マナ+1（1ターン1回）',
       can: p => p.coins >= 3 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.coins -= 3; gainMana(p, 1); } }] },
-  kuru: { name: '深淵の神 ク・ルゥ', short: 'ク・ルゥ', title: '眠れる名状しがたきもの', art: '🐙', color: '#3fae5a', hp: 21, diff: '★★★', sig: 'tentacle',
-    pool: ['whisper', 'offering', 'stars', 'chaos', 'wall'], draft: ['tentacle', 'flesh', 'abysseye', 'whisper', 'offering'],
+  kuru: { name: '深淵の神 ク・ルゥ', short: 'ク・ルゥ', title: '眠れる名状しがたきもの', art: '🐙', color: '#3fae5a', hp: 23, diff: '★★★', sig: 'tentacle',
+    pool: ['whisper', 'offering', 'stars', 'chaos', 'wall', 'crawlchaos', 'abyssprayer', 'oldone'], draft: ['tentacle', 'flesh', 'abysseye', 'whisper', 'offering'],
     passive: '【深淵】誰のカードでも、1枚破棄されるたび深淵+1。',
     style: '破棄すればするほど強くなる。相手の山札を削り、狂気を植え付ける。',
     actives: [
@@ -481,22 +569,22 @@ const HEROES = {
         can: p => p.abyss >= 5 && !p.used.a1,
         use: async p => { p.used.a1 = 1; p.abyss -= 5; log('ク・ルゥが目覚める…！'); await damage(opp(p), 5, '目覚め'); } }] },
   golem: { name: '古の守護者ゴーレム', short: 'ゴーレム', title: '動く城壁', art: '🗿', color: '#a08a6a', hp: 20, diff: '★☆☆', sig: 'rockfist',
-    pool: ['earth', 'retaliate', 'petrify', 'quake', 'repair'], draft: ['rockfist', 'pebble', 'moss', 'petrify'],
+    pool: ['earth', 'retaliate', 'petrify', 'quake', 'repair', 'rockwall', 'tremor', 'giantstep'], draft: ['rockfist', 'pebble', 'moss', 'petrify'],
     passive: '【鉄壁】防御カードのマナコスト-1。攻撃をカードで完全に防ぐと攻撃者に1ダメージ。',
     style: '守って溜めて反撃する。相手の手札を石化させて守りを崩す。',
     actives: [{ name: '地鳴り', cost: 'マナ2', text: '相手の手札を1枚まで【石化】（相手のターン開始時に解ける威圧・1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 2; await sealMore(p, opp(p), 1, true); } }] },
-  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 18, diff: '★☆☆', sig: 'lightsword',
-    pool: ['paladin', 'judgement', 'sanctuary', 'wrath', 'wing', 'archangel'], draft: ['lightsword', 'bless', 'radiant', 'feather', 'purge'],
+  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 17, diff: '★☆☆', sig: 'lightsword',
+    pool: ['paladin', 'judgement', 'sanctuary', 'wrath', 'wing', 'archangel', 'holylance', 'healinglight', 'halo'], draft: ['lightsword', 'bless', 'radiant', 'feather', 'purge'],
     passive: '【聖なる盾】HPより先に減る追加HP。自分のターン開始時に消える。ターン終了時に聖なる盾+2。',
     style: '攻撃のヒットや防御で聖なる盾を張り、相手ターンを耐える。盾を力に変える「審判の光」も。',
     actives: [{ name: '祈り', cost: 'マナ2', text: '聖なる盾+3（1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 2; gainShield(p, 3); } }] },
-  mech: { name: '機工士ギア', short: 'ギア', title: 'からくり仕掛けの発明家', art: '🤖', color: '#e08a2c', hp: 19, diff: '★★★', sig: 'gear',
-    pool: ['drill', 'jet', 'armor', 'scrap', 'coil', 'titan'], draft: ['gear', 'screw', 'wrench', 'armor', 'scrap'],
-    passive: '【精密工作】合成したカードのコスト-1。【部品】カードは合成するとボーナスを得る。',
+  mech: { name: '機工士ギア', short: 'ギア', title: 'からくり仕掛けの発明家', art: '🤖', color: '#e08a2c', hp: 22, diff: '★★★', sig: 'gear',
+    pool: ['drill', 'jet', 'armor', 'scrap', 'coil', 'titan', 'bolt', 'rocketpunch', 'drone'], draft: ['gear', 'screw', 'wrench', 'armor', 'scrap'],
+    passive: '【精密工作】合成したカードはコスト-1・ATK+1。【部品】カードは合成するとさらにボーナスを得る。',
     style: '手札2枚を1枚に合成して、ATK・DEF・効果をまとめて叩き込む。合成にはコインを使う。',
     actives: [
       { name: '合成', cost: 'コイン1', text: '手札2枚を1枚に合成（ATK・DEF・効果を合算。最大3枚分・1ターン2回まで）',
@@ -512,22 +600,22 @@ const HEROES = {
         use: async p => { const fs = p.hand.filter(c => c.fdef); const s = fs.length === 1 ? fs : await choose({ who: p, title: '最適化する合成カード', cards: fs, min: 1, max: 1, cancelable: true, ai: 'best' }); if (!s) return; optimize(p, s[0]); } }] },
 };
 Object.assign(HEROES, {
-  wolf: { name: '人狼ルガル', short: 'ルガル', title: '月に狂う獣', art: '🐺', color: '#8fa3c8', hp: 20, diff: '★★☆', sig: 'claw',
-    pool: ['beastguard', 'moonfang', 'lunacy', 'bloodhunt', 'howl'], draft: ['claw', 'lurk', 'howl', 'beastguard'],
+  wolf: { name: '人狼ルガル', short: 'ルガル', title: '月に狂う獣', art: '🐺', color: '#8fa3c8', hp: 18, diff: '★★☆', sig: 'claw',
+    pool: ['beastguard', 'moonfang', 'lunacy', 'bloodhunt', 'howl', 'den', 'eclipse', 'silverrage'], draft: ['claw', 'lurk', 'howl', 'beastguard'],
     passive: '【満ち欠け】奇数ラウンドは🌕満月、偶数ラウンドは🌑新月。満月：全ての攻撃ATK+1。新月：防御に使ったカード1枚につきDEF+1。カードの効果も月で変わる。',
     style: '満月に攻め、新月に守る。攻め時がひと目でわかる。',
     actives: [{ name: '人狼化', cost: 'マナ1', text: 'このターン、新月でも満月として扱う（1ターン1回）',
       can: p => p.mana >= 1 && !fullMoon(p) && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 1; p.wolfForm = true; log('ルガルは人狼と化した！（満月扱い）'); } }] },
   elf: { name: '森の射手リーフィア', short: 'リーフィア', title: '森を守るエルフの長', art: '🧝', color: '#9be36a', hp: 19, diff: '★★☆', sig: 'elfarcher',
-    pool: ['elfvolley', 'elfelder', 'elfkeeper', 'elfrain', 'elfrider'], draft: ['elfarcher', 'elfscout', 'elftwin', 'elfsinger'],
+    pool: ['elfvolley', 'elfelder', 'elfkeeper', 'elfrain', 'elfrider', 'elfhealer', 'elfambush', 'elfchorus'], draft: ['elfarcher', 'elfscout', 'elftwin', 'elfsinger'],
     passive: '【森の囁き】1ターンにエルフカードを2枚使うたび1枚引く。【連携】そのターン3枚目以降に使うエルフの攻撃ATK+1。',
     style: '低コストのエルフを次々に繰り出し、細かい攻撃を重ねる。手札が途切れにくい。',
     actives: [{ name: '森の祝福', cost: 'マナ3', text: 'このターン、エルフの攻撃全てATK+1（1ターン1回）',
       can: p => p.mana >= 3 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 3; p.elfBless = true; log('森の祝福！ エルフの攻撃ATK+1'); } }] },
   pharaoh: { name: 'ファラオ ネフェルカ', short: 'ネフェルカ', title: '砂漠に君臨する王家の末裔', art: '👑', color: '#d9b44a', hp: 17, diff: '★★☆', sig: 'scepter',
-    pool: ['anubis', 'sungod', 'pyramid', 'treasure', 'sphinx'], draft: ['scepter', 'sandstorm', 'scarab', 'mummy'],
+    pool: ['anubis', 'sungod', 'pyramid', 'treasure', 'sphinx', 'deadbook', 'uraeus', 'goldcoffin'], draft: ['scepter', 'sandstorm', 'scarab', 'mummy'],
     passive: '【王家の威光】自分のカードが【風化】で破棄されるたびコイン+1。',
     style: '強力だが使うと砂に還る【風化】カードを、王命で山札に戻して温存しながら戦う。',
     actives: [{ name: '王命', cost: 'なし', text: '手札1枚を山札に戻し（ランダムな位置）、1枚引く（1ターン1回）',
@@ -537,8 +625,8 @@ Object.assign(HEROES, {
         p.used.ro = (p.used.ro || 0) + 1; removeFrom(p.hand, s[0]); G.seals.delete(s[0].uid);
         p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, s[0]); log(`「${D(s[0]).name}」を山札に戻した`); await draw(p, 1);
       } }] },
-  dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 17, diff: '★★★', sig: 'raptor',
-    pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
+  dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 15, diff: '★★★', sig: 'raptor',
+    pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil', 'ankylo', 'spino', 'wakeroar'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
     passive: '【群れの狩り】恐竜が攻撃すると、このターンの以降の恐竜の攻撃コスト-1。恐竜は場に残り（最大2体）、相手は恐竜も攻撃対象に選べる。',
     style: '召喚した恐竜は使っても場に残る。恐竜を並べ、マナを払って次々に襲わせる。',
     actives: [{ name: '餌やり', cost: '手札1枚', text: '手札1枚を捨て、恐竜1体のHP+2。このターン恐竜の攻撃コスト-1（1ターン1回）',
@@ -549,9 +637,21 @@ Object.assign(HEROES, {
         p.used.a0 = 1; discardFromHand(p, s[0]); dn.hp += 2; dn.maxHp += 2; p.dinoDiscount += 1;
         log(`${dn.name}に餌を与えた（HP+2・攻撃コスト-1）`); render();
       } }] },
+  pyro: { name: '炎の魔術師イグニス', short: 'イグニス', title: '身を焦がす紅蓮の術者', art: '🔥', color: '#ff6a2a', hp: 20, diff: '★★★', sig: 'firebolt',
+    pool: ['flameblade', 'flamethrower', 'blast', 'flamewall', 'rebirth', 'ifrit'], draft: ['firebolt', 'cinder', 'soulburn', 'flamewall'],
+    passive: '【灼熱】自分のカードの効果で自分がダメージ（自傷）を受けるたび、灼熱+1。',
+    style: '強力な炎の代償に自分も焼かれる。灼熱を溜めて「炎の化身」を発動すれば、そのターンの自傷はすべて相手へ。ピーキーだが爆発力は随一。',
+    actives: [{ name: '炎の化身', cost: '灼熱3で無料／マナ3', text: 'このターン、自分のカードによる自傷ダメージは代わりに相手が受ける（1ターン1回）。灼熱が3以上なら灼熱3を消費して無料、足りなければマナ3。',
+      can: p => !p.used.a0 && !p.inferno && (p.burnCount >= 3 || p.mana >= 3),
+      use: async p => { p.used.a0 = 1; if (p.burnCount >= 3) p.burnCount -= 3; else p.mana -= 3; p.inferno = true; log('イグニスは炎の化身となった！ 自傷は相手へ！', 'dmg'); fx(p.idx, '炎の化身!', 'dmg'); } }] },
 });
-const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino'];
+const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro'];
 const fullMoon = p => G.round % 2 === 1 || !!p.wolfForm;
+// 自傷：炎の化身中は相手が受ける
+async function selfBurn(p, n, src) {
+  if (p.inferno) { log(`炎の化身：自傷${n}は相手へ！`, 'dmg'); await damage(opp(p), n, src + '（反転）'); return; }
+  p.burnCount++; await loseHp(p, n, src + '（自傷）');
+}
 
 // ================= dinosaurs =================
 const MAX_FIELD = 2;
@@ -603,7 +703,7 @@ function canPlay(p, c) {
   return true;
 }
 function weatherCard(p, c) {
-  log(`「${D(c).name}」は風化して砂に還った`, 'trash'); trash(p, c);
+  log(`「${D(c).name}」は風化して砂に還った`, 'trash'); trash(p, c); p.weathered.push(c);
   if (p.heroId === 'pharaoh') gainCoins(p, 1);
 }
 
@@ -617,7 +717,7 @@ function buildFused(inst) {
   const texts = ds.map(d => (d.text || '').replace(/\n?【部品】[^\n]*/g, '').trim()).filter(t => t);
   return { name: ds.map(d => d.name).join('＋'), type: isAtk ? 'attack' : 'skill', hero: 'mech', fused: true,
     cost: Math.max(0, ds.reduce((t, d) => t + d.cost, 0) - costRed - 1 - (inst.opt || 0)),
-    atk: isAtk ? ds.filter(d => d.type === 'attack').reduce((t, d) => t + d.atk, 0) + bonusAtk : 0,
+    atk: isAtk ? ds.filter(d => d.type === 'attack').reduce((t, d) => t + d.atk, 0) + bonusAtk + 1 : 0,
     def: ds.reduce((t, d) => t + d.def, 0), dc: Math.max(...ds.map(d => d.dc || 0)), price: ds.reduce((t, d) => t + d.price, 0), art: '⚙️',
     text: `【合成】${bonusAtk ? `部品ボーナスATK+${bonusAtk}\n` : ''}${texts.join('\n')}`,
     unblockable: ds.some(d => d.unblockable), play: seq('play'), hit: seq('hit'), defend: seq('defend') };
@@ -813,7 +913,7 @@ function showRules() {
   M = { type: 'html', title: '📜 ルール', html: `<div class="rules">
   <h3>勝利条件</h3><p>相手ヒーローのHPを0にすれば勝ち。</p>
   <h3>ターンの流れ</h3>
-  <p>① <b>開始</b>：コイン+1（後攻は初期コイン+2）</p>
+  <p>① <b>開始</b>：コイン+1（先攻の最初のターンはマナ4／後攻は初期コイン+2）</p>
   <p>② <b>カード獲得</b>：自分のヒーロー専用カードが3枚提示される。1枚選ぶと手札に加わり、このターンすぐ使える（以後デッキの一員）。獲得しないことも可能。</p>
   <p>③ <b>威圧</b>：相手の手札（丸見え）から1枚選ぶ。</p>
   <p>④ <b>メイン</b>：マナ（💧）を払って手札のカードを使う（攻撃 or スキル）。道具屋でコイン購入、ヒーロー能力の起動も可能。</p>
@@ -833,7 +933,8 @@ function showRules() {
   <p>【使用時】使った時／【ヒット時】攻撃がヒットした時／【防御時】防御に使った時／【構え】手札にある時／【引いた時】呪いなど／【部品】合成した時</p>
   <h3>特殊なキーワード</h3>
   <p><b>聖なる盾</b>（セラフィナ）：HPより先に減る追加HP。持ち主の次のターン開始時に消える。</p>
-  <p><b>満月／新月</b>（ルガル）：奇数ラウンドは満月、偶数ラウンドは新月。【月】カードは月によって効果が変わる。画面中央に今の月を表示。</p>
+  <p><b>満月／新月</b>（ルガル）：奇数ラウンドは満月、偶数ラウンドは新月。画面中央に今の月を表示。<b>満月型</b>のカードは満月で強く新月では弱くなり、<b>新月型</b>はその逆。</p>
+  <p><b>自傷</b>（イグニス）：使うと自分もダメージを受けるカード。自傷のたびに灼熱が溜まり、灼熱3で「炎の化身」を無料で発動できる（そのターンの自傷は相手が受ける）。</p>
   <p><b>エルフ</b>（リーフィア）：【エルフ】が付いた低コストカード。使った枚数に応じてドローや攻撃力が増える。</p>
   <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。王命で山札に戻せば温存できる。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
@@ -880,7 +981,7 @@ function newPlayer(idx, heroId) {
   const h = HEROES[heroId];
   return { idx, heroId, hero: h, hp: h.hp, maxHp: h.hp, deck: [], hand: [], discard: [], mana: 5, coins: 0, shield: 0, discount: 0,
     abyss: 0, rage: 0, rageNow: 0, storedAtk: 0, blockedAccum: 0, investNext: 0, nextAtkPending: 0, used: {}, attacksThisTurn: 0, skillsThisTurn: 0, turnAtk: 0, heroDeck: [], heroRow: [],
-    field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false };
+    field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false, burnCount: 0, inferno: false, weathered: [] };
 }
 function startGame(h0, h1, cpus = [null, null]) {
   UID = 1; FUSED = {}; SCREEN = 'game'; M = null; renderModal();
@@ -895,6 +996,8 @@ function startGame(h0, h1, cpus = [null, null]) {
   });
   G.marketDeck = shuffle(NEUTRAL.flatMap(id => [mk(id), mk(id)]));
   G.market = G.marketDeck.splice(-5);
+  // 先攻は相手ターンを経ずに攻撃できるので、最初のターンはマナ4
+  G.players[0].mana = 4;
   G.players[1].coins += 2;
   // CPU「つよい」のボーナス
   G.players.forEach((p, i) => { if (cpus[i] === 3) { p.maxHp += 3; p.hp += 3; p.coins += 2; } });
@@ -939,7 +1042,7 @@ function skipSeal() { if (G.phase === 'intimidate' && !G.busy) { G.phase = 'main
 async function endTurn() {
   const p = cur();
   if (p.heroId === 'angel') gainShield(p, 2);
-  p.wolfForm = false;
+  p.wolfForm = false; p.inferno = false;
   p.discard.push(...p.hand); p.hand = [];
   for (const pl of G.players) pl.discard = flatCards(pl.discard);
   pruneSeals();
@@ -991,7 +1094,7 @@ async function resolveAttack(a) {
     if (d.play) await d.play(a);
     a.atk += p.turnAtk + p.rageNow + pending;
     if (p.heroId === 'allen' && p.attacksThisTurn >= 1) a.atk += 2;
-    if (p.heroId === 'chuta' && p.coins >= 5) a.atk += 1;
+    if (p.heroId === 'chuta' && p.coins >= 4) a.atk += 1;
     if (p.heroId === 'wolf' && fullMoon(p)) a.atk += 1;
     if (d.elf && p.elfBless) a.atk += 1;
     if (d.elf && p.heroId === 'elf' && p.elvesThisTurn >= 3) a.atk += 1;
@@ -1150,9 +1253,14 @@ function playScore(p, c) {
   if (d.type === 'summon') return p.field.length >= MAX_FIELD ? -1 : 3 + d.dino.atk + d.dino.hp * 0.3;
   if (d.needDino && !p.field.length) return -1;
   if (d.needReady && !p.field.some(x => !x.exhausted)) return -1;
-  if (d.type === 'attack') return d.atk + (d.hit ? 1 : 0) + (d.unblockable ? 1.5 : 0) + (d.weather ? -0.5 : 0);
+  if (d.needTired && !p.field.some(x => x.exhausted)) return -1;
   if (d.heal && p.hp >= p.maxHp - 1) return -1;
-  return 2 + (d.price || 1) * 0.7;
+  // 自傷で倒れそうなら使わない
+  if (d.burn && !p.inferno && p.hp <= d.burn + 2) return -1;
+  let s = d.type === 'attack' ? d.atk + (d.hit ? 1 : 0) + (d.unblockable ? 1.5 : 0) + (d.weather ? -0.5 : 0) : 2 + (d.price || 1) * 0.7;
+  if (d.moon) s += (d.moon === 'full') === fullMoon(p) ? 2 : -4;
+  if (d.burn && p.inferno) s += d.burn * 1.5;
+  return s;
 }
 async function aiTurn(p) {
   const o = opp(p), lv = lvOf(p);
@@ -1206,7 +1314,8 @@ async function aiAction(p, o, lv) {
   }
   if (p.heroId === 'mech' && A[1].can(p) && p.hand.some(c => c.fdef && D(c).cost > p.mana && D(c).cost - 1 <= p.mana)) { optimize(p, p.hand.find(c => c.fdef && D(c).cost > p.mana)); return true; }
   if (p.heroId === 'pharaoh' && A[0].can(p) && junk()) return useAb(0);
-  if (p.heroId === 'wolf' && lv >= 2 && A[0].can(p) && p.mana >= 3 && playable().some(c => D(c).type === 'attack')) return useAb(0);
+  if (p.heroId === 'wolf' && lv >= 2 && A[0].can(p) && p.mana >= 3 && playable().filter(c => D(c).moon === 'full').length >= 1) return useAb(0);
+  if (p.heroId === 'pyro' && lv >= 2 && A[0].can(p) && (p.burnCount >= 3 || (lv === 3 && p.mana >= 5)) && p.hand.filter(c => D(c).burn).length >= 2) return useAb(0);
   if (p.heroId === 'elf' && lv >= 2 && A[0].can(p) && p.hand.filter(c => D(c).elf && D(c).type === 'attack' && canPlay(p, c) && D(c).cost <= p.mana - 3).length >= 2) return useAb(0);
   if (p.heroId === 'dino' && lv >= 2 && A[0].can(p) && junk()) return useAb(0);
   // 召喚 → 恐竜の攻撃
@@ -1263,7 +1372,7 @@ function cardHTML(c, opt = {}) {
   return `<div class="card ${d.type} ${d.fused ? 'fusedc' : ''} ${opt.cls || ''}" data-cid="${cid}" style="--hc:${hc}" ${opt.click ? `onclick="${opt.click}"` : ''}>
     ${d.type !== 'curse' ? `<div class="cost">${d.cost}</div>` : ''}
     <div class="cname">${d.name}</div><div class="art">${d.art}</div>
-    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.moon ? '・月' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
+    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
     <div class="ctext">${fmt(d.text)}</div><div class="stats">${stats}</div>
     ${opt.sealed ? `<div class="seal"><span>${G && G.tempSeals && G.tempSeals.has(c.uid) ? '石化' : '威圧'}</span></div>` : ''}${opt.extra || ''}</div>`;
 }
@@ -1287,6 +1396,8 @@ function panelHTML(p) {
   }).join('') || '<div class="empty">手札なし</div>';
   const extra = [];
   if (p.shield) extra.push(`<span class="holy">✨聖盾 <b>${p.shield}</b></span>`);
+  if (p.heroId === 'pyro') extra.push(`<span class="rage">🔥灼熱 <b>${p.burnCount}</b></span>`);
+  if (p.inferno) extra.push(`<span class="rage"><b>炎の化身中</b></span>`);
   if (p.heroId === 'kuru') extra.push(`<span class="abyss">🌀深淵 <b>${p.abyss}</b></span>`);
   if (p.heroId === 'garud') extra.push(`<span class="rage">💢怒り <b>${active ? p.rageNow : p.rage}</b>${!active && p.rage ? '(次)' : ''}</span>`);
   if (p.storedAtk) extra.push(`<span class="rage">💪溜め +${p.storedAtk}</span>`);
