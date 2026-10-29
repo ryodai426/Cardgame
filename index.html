@@ -150,7 +150,7 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .mbar{display:none}
 .card{-webkit-touch-callout:none;-webkit-user-select:none}
 /* ================= スマホ縦画面 ================= */
-@media (max-width: 760px) {
+@media (max-width: 760px) and (orientation: portrait) {
   html,body{height:100%;touch-action:manipulation}
   body{font-size:12px}
   #app{height:100dvh}
@@ -211,6 +211,69 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
   .lobby{padding:12px}.lobby .box{min-width:0;width:100%}.lobby .code{font-size:38px}
   .waitbox{font-size:12px;padding:6px 12px}
   .log div{font-size:12px}
+}
+/* ================= スマホ横画面 ================= */
+@media (max-height: 500px) and (orientation: landscape) {
+  html,body{height:100%;touch-action:manipulation}
+  body{font-size:11.5px}
+  #app{height:100dvh}
+  .game{display:block;height:100%}
+  .side{display:none}
+  .board{display:grid;height:100%;gap:4px;padding:4px max(4px, env(safe-area-inset-right)) 4px max(4px, env(safe-area-inset-left));
+    grid-template-columns:minmax(0,1fr) 172px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top bar" "bot center"}
+  .panel.top{grid-area:top}.panel.bot{grid-area:bot;min-height:0}
+  .mbar{grid-area:bar;display:grid;grid-template-columns:1fr 1fr;gap:4px;align-content:start}
+  .mbar button{padding:5px 4px;font-size:11.5px}
+  .mbar .hint{grid-column:1 / -1;color:#888;font-size:10px;text-align:center}
+  .panel{gap:6px;padding:4px 6px;border-radius:10px;min-height:0}
+  .info{width:148px;gap:2px}
+  .info .hrow{gap:5px}
+  .portrait{width:30px;height:30px;font-size:18px;border-width:1.5px}
+  .hname{font-size:12.5px}.hname small{display:none}
+  .info .hpbar{height:13px}.hpbar span{line-height:12px;font-size:10px}
+  .info .res{gap:1px 7px;font-size:11px}
+  .info .passive{display:none}
+  .abil{padding:2px 5px;font-size:10px}.abil small{font-size:8.5px}
+  .hand{padding:3px 2px;gap:4px}
+  .panel.top .card{--s:.55}
+  .panel.bot .card{--s:.74}
+  .panel.bot .hand{flex-wrap:wrap;align-content:flex-start;overflow-x:hidden;overflow-y:auto;align-items:flex-start;padding-top:7px}
+  .field{gap:3px;padding:0 3px;align-self:center}
+  .dino{width:56px;height:88px;font-size:8.5px;padding:2px}
+  .dart{font-size:20px}.dname{max-width:52px}.dst{font-size:10.5px}
+  .card .ubtns{bottom:2.6em}
+  .card .ubtns button{font-size:10.5px;padding:2px 3px}
+  .card .ulbl{bottom:6.4em;font-size:10px}
+  .center{grid-area:center;display:flex;flex-direction:column;gap:4px;padding:6px;min-height:0;overflow-y:auto;border-radius:10px}
+  .tinfo .big{font-size:13px}.tinfo .inst{margin-top:2px;font-size:10.5px;line-height:1.35}
+  .tinfo .inst button{margin-top:3px!important}
+  .stage{min-height:0;gap:6px;justify-content:flex-start;flex:1 1 auto}
+  .stage .note{display:none}
+  .stage .mini .card{--s:.45}
+  .stage .defs{display:none}
+  .stage .vs{font-size:10.5px}.stage .vs .n{font-size:17px}.stage .res{font-size:11px}
+  .cbtns{gap:4px;margin-top:auto}.cbtns button{padding:7px 6px;font-size:12px}
+  #modal.show{align-items:center}
+  .mbox{max-width:96vw;max-height:96dvh;padding:8px 12px;gap:5px}
+  .mtitle{font-size:14px}.msub{font-size:11px;line-height:1.4}
+  .mcards{gap:6px;max-height:none;flex:1 1 auto;min-height:0;padding:4px 0}
+  .mcards .card{--s:.74}
+  .mbtns button{padding:7px 16px;font-size:13px}
+  .msum{font-size:12px}
+  .shoprow{gap:6px;padding:4px 2px 10px}.shopitem .card{--s:.72}
+  .rules{max-height:72dvh;font-size:11.5px}
+  #preview{inset:0;width:auto;height:auto;top:0;right:0;display:none;background:rgba(5,3,10,.6);z-index:85}
+  #preview.show{display:flex}
+  #preview .card.big{--s:2}
+  .title,.lobby{justify-content:flex-start;overflow-y:auto;padding:14px;gap:10px}
+  .title h1{font-size:36px}.title .heroes{font-size:26px;letter-spacing:.05em}
+  .title > div:last-child button{font-size:15px!important;padding:9px 18px!important}
+  .lobby h2{font-size:22px}.lobby .code{font-size:32px}.lobby .box{padding:10px 16px}
+  .select{padding:8px 12px}.select h2{font-size:17px;margin-bottom:6px}
+  .hgrid{gap:8px}
+  .diff{margin-top:12px}.diff button{padding:10px 18px;font-size:15px}
+  .over{gap:10px}.over h1{font-size:30px}.over .w{font-size:50px}
+  .waitbox{font-size:12px;padding:5px 12px}
 }
 #modal.wait{display:block;position:fixed;inset:auto 0 auto 0;top:8px;pointer-events:none;z-index:45}
 .waitbox{margin:0 auto;width:max-content;max-width:90vw;background:#000c;border:2px solid var(--pc,#8a7340);border-radius:10px;padding:8px 18px;font-size:14px;color:#f3dfa8;box-shadow:0 0 16px -4px var(--pc,#000)}
@@ -1552,7 +1615,7 @@ function render() {
       ${ONLINE ? `<div style="display:flex;gap:12px"><button class="primary" onclick="netAgain()">もう一度対戦（ヒーロー選択へ）</button><button onclick="toTitle()">やめる（タイトルへ）</button></div>${NET && NET.oppAgain ? '<div style="color:#ffd65a">相手はもう一度遊ぶ準備ができています</div>' : ''}`
         : `<div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div>`}</div>`;
   }
-  app.innerHTML = `<div class="game"><div class="board"><div class="mbar"><button onclick="showLog()">📃 ログ</button><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button><span class="hint">カード長押しで拡大</span></div>${panelHTML(top, 'top')}${centerHTML()}${panelHTML(bot, 'bot')}</div>
+  app.innerHTML = `<div class="game"><div class="board"><div class="mbar"><button onclick="showLog()">📃 ログ</button><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button>${FS_OK ? `<button onclick="toggleFullscreen()">${document.fullscreenElement ? '⤡ 戻す' : '⛶ 全画面'}</button>` : ''}<span class="hint">カード長押しで拡大</span></div>${panelHTML(top, 'top')}${centerHTML()}${panelHTML(bot, 'bot')}</div>
     <div class="side"><div class="prevslot">カードにマウスを乗せると拡大</div>
       <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button></div>
       <div class="log">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div></div></div>${over}`;
@@ -1807,6 +1870,15 @@ netInstall();
 { const room = new URLSearchParams(location.search).get('room'); if (room) { SCREEN = 'online'; MODE = 'online'; setTimeout(() => netJoin(room), 0); } }
 
 // card preview on hover
+// 全画面表示（Android などで使える。iPhone の Safari は非対応なのでボタン自体を出さない）
+const FS_OK = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen) && matchMedia('(pointer: coarse)').matches;
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => toast('全画面にできませんでした'));
+}
+document.addEventListener('fullscreenchange', () => { if (SCREEN === 'game' && G) render(); });
+// 画面の向きが変わったら描き直す（拡大表示などを閉じる）
+addEventListener('orientationchange', () => { document.getElementById('preview').classList.remove('show'); LP_SHOWN = false; });
 function setPreview(el) {
   const id = el.dataset.cid;
   const inst = id[0] === 'F' ? FUSED[+id.slice(1)] : { uid: 0, id };
