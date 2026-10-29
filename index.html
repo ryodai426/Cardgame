@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>七英札闘 Seven Arcana Duel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -147,6 +147,71 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .over{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:40}
 .over h1{font-size:46px;color:#f0d080;margin:0}
 .over .w{font-size:80px}
+.mbar{display:none}
+.card{-webkit-touch-callout:none;-webkit-user-select:none}
+/* ================= スマホ縦画面 ================= */
+@media (max-width: 760px) {
+  html,body{height:100%;touch-action:manipulation}
+  body{font-size:12px}
+  #app{height:100dvh}
+  .game{display:block;height:100%}
+  .side{display:none}
+  .board{display:flex;flex-direction:column;height:100%;gap:4px;padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .mbar{display:flex;gap:4px;align-items:center;flex:none}
+  .mbar button{padding:4px 8px;font-size:12px}
+  .mbar .hint{flex:1;color:#888;font-size:10.5px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .panel{flex-direction:column;gap:4px;padding:5px;border-radius:10px;flex:none}
+  .panel.bot{flex:1 1 auto;min-height:0}
+  .info{width:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:3px 8px}
+  .info .hrow{flex:none;gap:6px}
+  .info .hpbar{flex:1 1 110px;height:14px}
+  .hpbar span{line-height:13px;font-size:10.5px}
+  .info .res{flex:1 1 100%;gap:2px 9px;font-size:11.5px}
+  .info .passive{display:none}
+  .portrait{width:34px;height:34px;font-size:20px;border-width:1.5px}
+  .hname{font-size:13px}.hname small{display:none}
+  .abil{padding:2px 6px;font-size:10.5px}.abil small{font-size:9px}
+  .hand{flex:none;padding:3px 2px 5px;gap:5px;align-items:flex-start}
+  .panel.top .card{--s:.6}
+  .panel.bot .card{--s:.8}
+  .panel.bot .hand{flex:1 1 auto;min-height:0;flex-wrap:wrap;justify-content:center;align-content:flex-start;overflow-x:hidden;overflow-y:auto;padding-top:8px}
+  .field{border:none;padding:0;gap:4px;align-self:flex-start}
+  .dino{width:60px;height:96px;font-size:9px;padding:2px}
+  .dart{font-size:22px}.dname{max-width:56px}.dst{font-size:11px}
+  .card .ubtns{bottom:2.6em}
+  .card .ubtns button{font-size:11px;padding:3px 4px}
+  .card .ulbl{bottom:6.2em;font-size:10px}
+  .center{grid-template-columns:1fr auto;grid-template-areas:"info btns" "stage stage";gap:4px 8px;padding:6px 8px;min-height:0;flex:none;border-radius:10px}
+  .tinfo{grid-area:info;min-width:0}.tinfo .big{font-size:14px}.tinfo .inst{margin-top:2px;font-size:11px;line-height:1.4}
+  .cbtns{grid-area:btns;gap:5px}.cbtns button{padding:7px 10px;font-size:12px}
+  .stage{grid-area:stage;min-height:0;gap:8px;justify-content:flex-start}
+  .stage .note{display:none}
+  .stage .mini .card{--s:.5}
+  .stage .vs{font-size:11px}.stage .vs .n{font-size:20px}.stage .res{font-size:12px}
+  #modal.show{align-items:flex-end}
+  .mbox{max-width:100vw;width:100vw;max-height:88dvh;border-radius:14px 14px 0 0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));gap:6px}
+  .mtitle{font-size:15px}.msub{font-size:12px;line-height:1.45}
+  .mcards{gap:6px;max-height:none;flex:1 1 auto;min-height:0;justify-content:center;padding:6px 0}
+  .mcards .card{--s:.92}
+  .mbtns{justify-content:stretch}.mbtns button{flex:1;padding:11px 8px;font-size:14px}
+  .msum{font-size:13px}
+  .shoprow{gap:8px;justify-content:center}.shopitem .card{--s:.88}
+  .rules{max-height:none;font-size:12px}
+  #preview{inset:0;width:auto;height:auto;top:0;right:0;display:none;background:rgba(5,3,10,.6);z-index:85}
+  #preview.show{display:flex}
+  .title{gap:12px;padding:12px}
+  .title h1{font-size:44px}.title .heroes{font-size:30px;letter-spacing:.1em}
+  .title > div:last-child{flex-wrap:wrap;justify-content:center}
+  .title > div:last-child button{font-size:16px!important;padding:12px 18px!important;flex:1 1 40%}
+  .select{padding:10px}.select h2{font-size:18px}
+  .hgrid{grid-template-columns:1fr;gap:8px}
+  .diff{flex-direction:column;align-items:stretch;padding:0 10px}
+  .over{padding:16px;text-align:center}.over h1{font-size:32px}.over .w{font-size:60px}
+  .over > div:last-child, .over > div:nth-last-child(2){flex-wrap:wrap;justify-content:center}
+  .lobby{padding:12px}.lobby .box{min-width:0;width:100%}.lobby .code{font-size:38px}
+  .waitbox{font-size:12px;padding:6px 12px}
+  .log div{font-size:12px}
+}
 #modal.wait{display:block;position:fixed;inset:auto 0 auto 0;top:8px;pointer-events:none;z-index:45}
 .waitbox{margin:0 auto;width:max-content;max-width:90vw;background:#000c;border:2px solid var(--pc,#8a7340);border-radius:10px;padding:8px 18px;font-size:14px;color:#f3dfa8;box-shadow:0 0 16px -4px var(--pc,#000)}
 .lobby{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
@@ -933,6 +998,10 @@ function heroDetailHTML(h) {
   <p><span class="lbl">特徴</span><br>${h.style}</p>
   <p class="cards"><span class="lbl">獲得候補</span> ${h.draft.map(id => CARDS[id].name).join('・')}<br><span class="lbl">専用ショップ</span> ${h.pool.map(id => CARDS[id].name).join('・')}</p>`;
 }
+function showLog() {
+  if (!G || (M && M.res && !M.view)) return;
+  M = { type: 'html', title: '📃 ログ', html: `<div class="log" style="max-height:65vh;border:none">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div>` }; renderModal();
+}
 function showRules() {
   if (M && M.res && !M.view) { toast('選択が終わってから開いてください'); return; }
   M = { type: 'html', title: '📜 ルール', html: `<div class="rules">
@@ -968,7 +1037,7 @@ function showRules() {
   <p>道具屋で買ったカードは捨て札へ。共通カード5枚＋自分のヒーロー専用カード3枚が並ぶ。<br><b>お祓い</b>（🪙3、1ターン1回）：手札1枚を破棄。</p>
   <p><b>破棄</b>はカードをゲームから除外する。弱いカードや呪いを破棄してデッキを圧縮しよう。</p>
   <p><b>呪い</b>：使用も防御もできず、引いた時に悪い効果。</p>
-  <h3>操作</h3><p>手札をクリックで使用。カードにマウスを乗せると右上に拡大表示。ヒーローの顔をクリックで詳細。山札・捨て札の数字クリックで中身を確認。威圧されたカードには解除ボタンが出る。</p>
+  <h3>操作</h3><p>手札をクリックで使用。カードにマウスを乗せると右上に拡大表示（スマホではカードを長押し）。ヒーローの顔をクリックで詳細。山札・捨て札の数字クリックで中身を確認。威圧されたカードには解除ボタンが出る。</p>
   </div>` };
   renderModal();
 }
@@ -1410,7 +1479,7 @@ function dinoHTML(p, dn, main) {
     <div class="dhp"><div style="width:${Math.max(0, 100 * dn.hp / dn.maxHp)}%"></div><span>❤${dn.hp}/${dn.maxHp}</span></div>
     <div class="dst"><span class="atk">⚔${dn.atk + p.dinoAtk}</span> <span class="mana">💧${cost}</span></div>${dn.exhausted ? '<div class="dz">待機中</div>' : ''}</div>`;
 }
-function panelHTML(p) {
+function panelHTML(p, pos = '') {
   const h = p.hero, active = G.turn === p.idx, cpu = isCPU(p);
   const main = G.phase === 'main' && !G.busy && active && !cpu && !isRemote(p);
   const hand = p.hand.map(c => {
@@ -1433,7 +1502,7 @@ function panelHTML(p) {
   if (p.heroId === 'golem' && p.blockedAccum) extra.push(`<span class="mana">🛡防御計 ${p.blockedAccum}</span>`);
   const abils = h.actives.map((ab, k) => `<button class="abil" title="${ab.text}" ${main && ab.can(p) ? '' : 'disabled'} onclick="useActive(${p.idx},${k})">${ab.name}<small>${ab.cost}</small></button>`).join('');
   const tot = p.maxHp + p.shield;
-  return `<div class="panel ${active ? 'active' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
+  return `<div class="panel ${pos} ${active ? 'active' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
     <div class="info">
       <div class="hrow"><div class="portrait" onclick="heroInfo(${p.idx})" title="クリックで詳細">${h.art}</div>
         <div class="hname"><span class="pl">${plabel(p)}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
@@ -1441,7 +1510,7 @@ function panelHTML(p) {
       <div class="res"><span class="mana">💧マナ <b>${p.mana}</b></span><span class="coin">🪙 <b>${p.coins}</b></span>
         <span class="clk" onclick="viewPile(${p.idx},'deck')">📚山札 <b>${p.deck.length}</b></span><span class="clk" onclick="viewPile(${p.idx},'discard')">🗑捨札 <b>${flatCards(p.discard).length}</b></span>${extra.join('')}</div>
       <div class="abils">${abils}</div>
-      <div style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
+      <div class="passive" style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
     </div>
     ${p.field.length ? `<div class="field">${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
     <div class="hand">${hand}</div></div>`;
@@ -1483,7 +1552,7 @@ function render() {
       ${ONLINE ? `<div style="display:flex;gap:12px"><button class="primary" onclick="netAgain()">もう一度対戦（ヒーロー選択へ）</button><button onclick="toTitle()">やめる（タイトルへ）</button></div>${NET && NET.oppAgain ? '<div style="color:#ffd65a">相手はもう一度遊ぶ準備ができています</div>' : ''}`
         : `<div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div>`}</div>`;
   }
-  app.innerHTML = `<div class="game"><div class="board">${panelHTML(top)}${centerHTML()}${panelHTML(bot)}</div>
+  app.innerHTML = `<div class="game"><div class="board"><div class="mbar"><button onclick="showLog()">📃 ログ</button><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button><span class="hint">カード長押しで拡大</span></div>${panelHTML(top, 'top')}${centerHTML()}${panelHTML(bot, 'bot')}</div>
     <div class="side"><div class="prevslot">カードにマウスを乗せると拡大</div>
       <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button></div>
       <div class="log">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div></div></div>${over}`;
@@ -1738,15 +1807,32 @@ netInstall();
 { const room = new URLSearchParams(location.search).get('room'); if (room) { SCREEN = 'online'; MODE = 'online'; setTimeout(() => netJoin(room), 0); } }
 
 // card preview on hover
+function setPreview(el) {
+  const id = el.dataset.cid;
+  const inst = id[0] === 'F' ? FUSED[+id.slice(1)] : { uid: 0, id };
+  if (inst) document.getElementById('preview').innerHTML = cardHTML(inst, { cls: 'big' });
+  return !!inst;
+}
 document.addEventListener('mouseover', e => {
   const el = e.target.closest && e.target.closest('[data-cid]');
-  const pv = document.getElementById('preview');
-  if (el && SCREEN === 'game') {
-    const id = el.dataset.cid;
-    const inst = id[0] === 'F' ? FUSED[+id.slice(1)] : { uid: 0, id };
-    if (inst) pv.innerHTML = cardHTML(inst, { cls: 'big' });
-  }
+  if (el && SCREEN === 'game' && !LP_SHOWN) setPreview(el);
 });
+// スマホ：カードを長押しで拡大表示（指を離すと閉じる。長押しした時はカードを使わない）
+let LP = null, LP_SHOWN = false, LP_XY = null;
+document.addEventListener('touchstart', e => {
+  const el = e.target.closest && e.target.closest('[data-cid]');
+  clearTimeout(LP); if (!el || e.target.closest('button') || e.touches.length > 1) return;
+  LP_XY = [e.touches[0].clientX, e.touches[0].clientY];
+  LP = setTimeout(() => { if (setPreview(el)) { LP_SHOWN = true; document.getElementById('preview').classList.add('show'); if (navigator.vibrate) navigator.vibrate(12); } }, 380);
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (!LP_XY || LP_SHOWN) return; const t = e.touches[0];
+  if (Math.abs(t.clientX - LP_XY[0]) + Math.abs(t.clientY - LP_XY[1]) > 10) clearTimeout(LP);
+}, { passive: true });
+const lpEnd = () => { clearTimeout(LP); LP_XY = null; if (!LP_SHOWN) return; document.getElementById('preview').classList.remove('show'); setTimeout(() => { LP_SHOWN = false; }, 450); };
+document.addEventListener('touchend', lpEnd); document.addEventListener('touchcancel', lpEnd);
+document.addEventListener('click', e => { if (LP_SHOWN) { e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-cid]')) e.preventDefault(); });
 render();
 </script>
 </body>
