@@ -327,6 +327,8 @@ const removeFrom = (arr, x) => { const i = arr.indexOf(x); if (i >= 0) arr.splic
 const flatCards = arr => arr.flatMap(c => c.parts ? c.parts : [c]);
 // 威圧の解除コスト（CPU同士の自動対戦で調整）
 const UNSEAL = { hp: 2, coin: 2, mana: 2 };
+// ガルドの怒りで上がる攻撃力の上限（CPU同士の自動対戦で調整）
+const RAGE_CAP = 3;
 // 1回の攻撃に出せる防御カードの上限（守りすぎによる膠着を防ぐ）
 let MAX_DEF = 2;
 // 瘴気：長期戦を終わらせる時計。ラウンド10から毎ターン開始時にダメージ（3ラウンドごとに+1）
@@ -760,7 +762,7 @@ const HEROES = {
       use: async p => { const s = await choose({ who: p, title: '構え直し：捨てるカード', cards: p.hand, min: 1, max: 1, cancelable: true, ai: 'worst' }); if (!s) return; p.used.a0 = 1; discardFromHand(p, s[0]); await draw(p, 1); } }] },
   garud: { name: '呪われし狂戦士ガルド', short: 'ガルド', title: '呪いを喰らう魔剣士', art: '👹', color: '#e0443a', hp: 23, diff: '★★☆', sig: 'bloodblade',
     pool: ['demonblade', 'frenzy', 'thirst', 'grudge', 'ruin', 'cursechain', 'bloodprice', 'berserkroar'], draft: ['bloodblade', 'oath', 'cursefeed', 'grudge', 'thirst'],
-    passive: '【怒り】呪いを引くたび怒り+1。次の自分のターン中、全ての攻撃ATK+怒り。',
+    passive: `【怒り】呪いを引くたび怒り+1。次の自分のターン中、全ての攻撃ATK+怒り（最大+${RAGE_CAP}）。`,
     style: '超火力の代償に自分のデッキへ「血の呪い」を埋める。HP最大のハイリスク型。',
     actives: [{ name: '血の解放', cost: 'HP3', text: 'HPを3失い、このターンの攻撃全てATK+2（1ターン1回）',
       can: p => p.hp > 3 && !p.used.a0,
@@ -1393,7 +1395,7 @@ async function startTurn() {
   const p = cur(), o = opp(p);
   if (ONLINE) netCheck();
   p.used = {}; p.attacksThisTurn = 0; p.skillsThisTurn = 0; p.turnAtk = 0; p.discount = 0; p.nextAtkPending = 0;
-  p.rageNow = p.rage; p.rage = 0;
+  p.rageNow = Math.min(RAGE_CAP, p.rage); p.rage = 0;
   p.dinoDiscount = 0; p.dinoAtk = 0; p.elvesThisTurn = 0; p.elfBless = false;
   p.anchor = false; p.wSwings = 1; p.wUsed = 0; p.wTurnAtk = 0; p.wCoinBonus = 0; p.wDisc = 0;
   p.keisei = false; p.charmBonus = 0; p.bandAtk = 0; p.band.forEach(m => { m.used = 0; m.max = 1; });
@@ -1825,7 +1827,7 @@ function panelHTML(p, pos = '') {
   if (p.heroId === 'pyro') extra.push(`<span class="rage">🔥灼熱 <b>${p.burnCount}</b></span>`);
   if (p.inferno) extra.push(`<span class="rage"><b>炎の化身中</b></span>`);
   if (p.heroId === 'kuru') extra.push(`<span class="abyss">🌀深淵 <b>${p.abyss}</b></span>`);
-  if (p.heroId === 'garud') extra.push(`<span class="rage">💢怒り <b>${active ? p.rageNow : p.rage}</b>${!active && p.rage ? '(次)' : ''}</span>`);
+  if (p.heroId === 'garud') extra.push(`<span class="rage">💢怒り <b>${active ? p.rageNow : Math.min(RAGE_CAP, p.rage)}</b>${!active && p.rage ? '(次)' : ''}</span>`);
   if (p.storedAtk) extra.push(`<span class="rage">💪溜め +${p.storedAtk}</span>`);
   if (p.turnAtk && active) extra.push(`<span class="rage">⚔全攻撃+${p.turnAtk}</span>`);
   if (p.nextAtkPending && active) extra.push(`<span class="rage">⚔次の攻撃+${p.nextAtkPending}</span>`);
