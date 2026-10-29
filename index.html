@@ -147,7 +147,19 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .over{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:40}
 .over h1{font-size:46px;color:#f0d080;margin:0}
 .over .w{font-size:80px}
+#modal.wait{display:block;position:fixed;inset:auto 0 auto 0;top:8px;pointer-events:none;z-index:45}
+.waitbox{margin:0 auto;width:max-content;max-width:90vw;background:#000c;border:2px solid var(--pc,#8a7340);border-radius:10px;padding:8px 18px;font-size:14px;color:#f3dfa8;box-shadow:0 0 16px -4px var(--pc,#000)}
+.lobby{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.lobby h2{margin:0;color:#f0d080;font-size:28px}
+.lobby .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.lobby .box{background:rgba(0,0,0,.35);border:1px solid #3a3150;border-radius:12px;padding:16px 22px;min-width:300px}
+.lobby .code{font-size:44px;font-weight:bold;letter-spacing:.25em;color:#fff;margin:6px 0}
+.lobby input{font-size:24px;padding:6px 10px;width:170px;text-align:center;letter-spacing:.2em;text-transform:uppercase;background:#120f1d;color:#fff;border:1px solid #8a7340;border-radius:6px}
+.lobby .st{color:#ccc;line-height:1.6;min-height:1.6em}
+.lobby .err{color:#ff8a8a}
+#netlost{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;font-size:16px}
 </style>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -155,13 +167,17 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 <div id="preview"></div>
 <div id="fxl"></div>
 <div id="toast"></div>
+<div id="netlost"><div style="font-size:22px;color:#ff8a8a">⚠ 相手との接続が切れました</div><button class="primary" onclick="toTitle()">タイトルへ</button></div>
 <script>
 // ================= utilities =================
 let ANIM = 1;
+// ゲーム進行用の乱数。オンライン対戦では両者で同じシード値の乱数を使い、同じ結果になるようにする
+let RNG = Math.random;
+const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 // 待機中にゲームが入れ替わったら（タイトルに戻って新しく始めた等）、古い処理はそこで打ち切る
 class Aborted extends Error {}
 const sleep = ms => { const g = G; return new Promise(r => setTimeout(r, ms * ANIM)).then(() => { if (G !== g) throw new Aborted(); }); };
-const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(RNG() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const rand = a => a[Math.floor(Math.random() * a.length)];
 let UID = 1;
 const mk = id => ({ uid: UID++, id });
@@ -172,7 +188,11 @@ const cur = () => G.players[G.turn];
 const opp = p => G.players[1 - p.idx];
 const isCPU = p => !!(G && G.cpus && G.cpus[p.idx]);
 const lvOf = p => G.cpus[p.idx];
-const pname = p => `${isCPU(p) ? 'CPU' : 'P' + (p.idx + 1)}(${p.hero.short})`;
+// オンライン対戦：ME＝自分のプレイヤー番号。相手側のプレイヤーは isRemote
+let ONLINE = false, ME = 0;
+const isRemote = p => ONLINE && !!p && p.idx !== ME;
+const plabel = p => ONLINE ? (p.idx === ME ? 'あなた' : '相手') : isCPU(p) ? 'CPU' : 'P' + (p.idx + 1);
+const pname = p => `${plabel(p)}(${p.hero.short})`;
 const removeFrom = (arr, x) => { const i = arr.indexOf(x); if (i >= 0) arr.splice(i, 1); return i >= 0; };
 const flatCards = arr => arr.flatMap(c => c.parts ? c.parts : [c]);
 // 威圧の解除コスト（CPU同士の自動対戦で調整）
@@ -623,7 +643,7 @@ Object.assign(HEROES, {
       use: async p => {
         const s = await choose({ who: p, title: '王命：山札に戻すカード', cards: p.hand, min: 1, max: 1, cancelable: true, ai: 'worst' }); if (!s) return;
         p.used.ro = (p.used.ro || 0) + 1; removeFrom(p.hand, s[0]); G.seals.delete(s[0].uid);
-        p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, s[0]); log(`「${D(s[0]).name}」を山札に戻した`); await draw(p, 1);
+        p.deck.splice(Math.floor(RNG() * (p.deck.length + 1)), 0, s[0]); log(`「${D(s[0]).name}」を山札に戻した`); await draw(p, 1);
       } }] },
   dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 15, diff: '★★★', sig: 'raptor',
     pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil', 'ankylo', 'spino', 'wakeroar'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
@@ -743,7 +763,7 @@ function fx(pi, text, kind) {
   document.getElementById('fxl').appendChild(d); setTimeout(() => d.remove(), 1300);
 }
 let toastT;
-function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
+function toast(t) { if (NET_APPLYING) return; const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 
 // ================= core helpers =================
 async function damage(t, n, src = '', pierce = false) {
@@ -814,7 +834,7 @@ async function steal(p, o) {
 function discardFromHand(p, c) { if (removeFrom(p.hand, c)) p.discard.push(c); }
 function addCard(p, id, where) {
   const c = mk(id);
-  if (where === 'deck') p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, c); else p.discard.push(c);
+  if (where === 'deck') p.deck.splice(Math.floor(RNG() * (p.deck.length + 1)), 0, c); else p.discard.push(c);
   log(`${pname(p)}の${where === 'deck' ? '山札' : '捨て札'}に「${CARDS[id].name}」が加わった`, 'trash');
 }
 const dcost = (p, c) => Math.max(0, (D(c).dc || 0) - (p.heroId === 'golem' ? 1 : 0));
@@ -865,9 +885,13 @@ function closeModal() { M = null; renderModal(); render(); }
 function renderModal() {
   const el = document.getElementById('modal');
   if (!M) { el.className = ''; el.innerHTML = ''; return; }
-  el.className = 'show';
   const pc = M.who ? M.who.hero.color : '#c89b3c';
-  const head = M.who ? `<span class="pl" style="--pc:${pc}">${isCPU(M.who) ? 'CPU' : 'P' + (M.who.idx + 1)} ${M.who.hero.short}</span>` : '';
+  // オンライン：相手の選択中は、モーダルの代わりに上部へ小さく表示
+  if (isRemote(M.who) && !localModal(M)) {
+    el.className = 'wait'; el.innerHTML = `<div class="waitbox" style="--pc:${pc}">⏳ 相手が選択中… <span style="color:#aaa">${M.title}</span></div>`; return;
+  }
+  el.className = 'show';
+  const head = M.who ? `<span class="pl" style="--pc:${pc}">${plabel(M.who)} ${M.who.hero.short}</span>` : '';
   if (M.type === 'choose') {
     const min = Math.min(M.min, M.cards.filter(c => !(M.disabled && M.disabled(c))).length);
     M.sel = M.sel.filter(c => !(M.disabled && M.disabled(c)));
@@ -910,6 +934,7 @@ function heroDetailHTML(h) {
   <p class="cards"><span class="lbl">獲得候補</span> ${h.draft.map(id => CARDS[id].name).join('・')}<br><span class="lbl">専用ショップ</span> ${h.pool.map(id => CARDS[id].name).join('・')}</p>`;
 }
 function showRules() {
+  if (M && M.res && !M.view) { toast('選択が終わってから開いてください'); return; }
   M = { type: 'html', title: '📜 ルール', html: `<div class="rules">
   <h3>勝利条件</h3><p>相手ヒーローのHPを0にすれば勝ち。</p>
   <h3>ターンの流れ</h3>
@@ -949,11 +974,11 @@ function showRules() {
 }
 
 // ================= shop =================
-function openShop() { if (!G || G.busy || G.phase !== 'main' || M || isCPU(cur())) return; M = { type: 'shop' }; renderModal(); }
+function openShop() { if (!G || G.busy || G.phase !== 'main' || M || isCPU(cur()) || isRemote(cur())) return; M = { type: 'shop' }; renderModal(); }
 function shopHTML() {
   const p = cur();
   const row = (arr, src) => arr.map((c, i) => { const pr = price(p, D(c)); return `<div class="shopitem">${cardHTML(c)}<button ${p.coins >= pr ? '' : 'disabled'} onclick="buy('${src}',${i})">🪙${pr} 購入</button></div>`; }).join('') || '<span class="msub">売り切れ</span>';
-  return `<div class="mbox" style="--pc:${p.hero.color}"><div class="mtitle"><span class="pl" style="--pc:${p.hero.color}">P${p.idx + 1} ${p.hero.short}</span>🛒 道具屋　<span class="coin">🪙 ${p.coins}</span></div>
+  return `<div class="mbox" style="--pc:${p.hero.color}"><div class="mtitle"><span class="pl" style="--pc:${p.hero.color}">${plabel(p)} ${p.hero.short}</span>🛒 道具屋　<span class="coin">🪙 ${p.coins}</span></div>
   <div class="msub">買ったカードは捨て札に入ります。${p.heroId === 'chuta' ? '（商才：全品1コイン引き）' : ''}${p.discount ? `（値切り中：-${p.discount}）` : ''}</div>
   <div style="overflow-y:auto;max-height:72vh">
   <div class="sect">共通カード</div><div class="shoprow">${row(G.market, 'm')}</div>
@@ -1007,6 +1032,7 @@ function startGame(h0, h1, cpus = [null, null]) {
 }
 async function startTurn() {
   const p = cur(), o = opp(p);
+  if (ONLINE) netCheck();
   p.used = {}; p.attacksThisTurn = 0; p.skillsThisTurn = 0; p.turnAtk = 0; p.discount = 0; p.nextAtkPending = 0;
   p.rageNow = p.rage; p.rage = 0;
   p.dinoDiscount = 0; p.dinoAtk = 0; p.elvesThisTurn = 0; p.elfBless = false;
@@ -1386,11 +1412,11 @@ function dinoHTML(p, dn, main) {
 }
 function panelHTML(p) {
   const h = p.hero, active = G.turn === p.idx, cpu = isCPU(p);
-  const main = G.phase === 'main' && !G.busy && active && !cpu;
+  const main = G.phase === 'main' && !G.busy && active && !cpu && !isRemote(p);
   const hand = p.hand.map(c => {
     const d = D(c); let cls = ''; const sealed = G.seals.has(c.uid);
     if (main) cls = canPlay(p, c) ? 'playable' : 'unaff';
-    if (G.phase === 'intimidate' && !active && !G.busy && !isCPU(cur()) && d.type !== 'curse' && !sealed) cls = 'target';
+    if (G.phase === 'intimidate' && !active && !G.busy && !isCPU(cur()) && !isRemote(cur()) && d.type !== 'curse' && !sealed) cls = 'target';
     const extra = sealed && main ? unsealHTML(p, c) : '';
     return cardHTML(c, { cls, sealed, extra, click: `handClick(${p.idx},${c.uid})` });
   }).join('') || '<div class="empty">手札なし</div>';
@@ -1410,7 +1436,7 @@ function panelHTML(p) {
   return `<div class="panel ${active ? 'active' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
     <div class="info">
       <div class="hrow"><div class="portrait" onclick="heroInfo(${p.idx})" title="クリックで詳細">${h.art}</div>
-        <div class="hname"><span class="pl">P${p.idx + 1}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
+        <div class="hname"><span class="pl">${plabel(p)}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
       <div class="hpbar"><div class="hp" style="width:${100 * p.hp / tot}%"></div><div class="sh" style="width:${100 * p.shield / tot}%"></div><span>HP ${p.hp} / ${p.maxHp}${p.shield ? ` ＋✨${p.shield}` : ''}</span></div>
       <div class="res"><span class="mana">💧マナ <b>${p.mana}</b></span><span class="coin">🪙 <b>${p.coins}</b></span>
         <span class="clk" onclick="viewPile(${p.idx},'deck')">📚山札 <b>${p.deck.length}</b></span><span class="clk" onclick="viewPile(${p.idx},'discard')">🗑捨札 <b>${flatCards(p.discard).length}</b></span>${extra.join('')}</div>
@@ -1424,6 +1450,7 @@ function centerHTML() {
   const p = cur(), o = opp(p);
   let inst = '';
   if (isCPU(p)) inst = '🤖 CPUが考え中…';
+  else if (isRemote(p)) inst = `⏳ 相手のターンです${G.phase === 'intimidate' ? '（威圧するカードを選択中）' : '…'}`;
   else if (G.busy) inst = '処理中…';
   else if (G.phase === 'intimidate') inst = `<b style="color:#ff6a6a">【威圧】</b>${pname(o)}の手札から1枚クリック。そのカードは相手が解除するまで使用・防御できない。<br><button onclick="skipSeal()" style="margin-top:4px;padding:3px 10px">威圧しない</button>`;
   else inst = `手札をクリックで使用。<br>💧${p.mana}マナ／🪙${p.coins}コイン`;
@@ -1435,9 +1462,9 @@ function centerHTML() {
       <div class="vs"><div><span class="n a">⚔${s.atk}</span>　vs　<span class="n d">🛡${s.def}</span></div><span class="res">${s.result || (G.busy ? '防御判定中…' : '')}</span></div>
       <div class="defs mini">${s.defs.map(c => cardHTML(c)).join('')}</div>`;
   }
-  const canAct = G.phase === 'main' && !G.busy && !isCPU(p);
+  const canAct = G.phase === 'main' && !G.busy && !isCPU(p) && !isRemote(p);
   return `<div class="center" style="--pc:${p.hero.color}">
-    <div class="tinfo"><div>ラウンド ${G.round}${G.players.some(x => x.heroId === 'wolf') ? `　<span style="color:${G.round % 2 ? '#ffe680' : '#8fa3c8'}">${G.round % 2 ? '🌕満月' : '🌑新月'}</span>` : ''}${miasma() ? `　<span class="rage">⏳瘴気 ${miasma()}</span>` : G.round >= MIASMA_START - 2 ? `　<span style="color:#999">⏳瘴気まで${MIASMA_START - G.round}R</span>` : ''}</div><div class="big">${isCPU(p) ? 'CPU' : 'P' + (p.idx + 1)} ${p.hero.short} のターン</div><div class="inst">${inst}</div></div>
+    <div class="tinfo"><div>ラウンド ${G.round}${G.players.some(x => x.heroId === 'wolf') ? `　<span style="color:${G.round % 2 ? '#ffe680' : '#8fa3c8'}">${G.round % 2 ? '🌕満月' : '🌑新月'}</span>` : ''}${miasma() ? `　<span class="rage">⏳瘴気 ${miasma()}</span>` : G.round >= MIASMA_START - 2 ? `　<span style="color:#999">⏳瘴気まで${MIASMA_START - G.round}R</span>` : ''}</div><div class="big">${plabel(p)} ${p.hero.short} のターン</div><div class="inst">${inst}</div></div>
     <div class="stage">${st}</div>
     <div class="cbtns"><button onclick="openShop()" ${canAct ? '' : 'disabled'}>🛒 道具屋（🪙${p.coins}）</button>
       <button class="danger" onclick="endTurnClick()" ${canAct ? '' : 'disabled'}>ターン終了 ▶</button></div></div>`;
@@ -1446,27 +1473,30 @@ function render() {
   const app = document.getElementById('app');
   if (SCREEN === 'title') { app.innerHTML = titleHTML(); return; }
   if (SCREEN === 'select') { app.innerHTML = selectHTML(); return; }
+  if (SCREEN === 'online') { app.innerHTML = lobbyHTML(); return; }
   if (ANIM === 0 && G.phase !== 'over') return; // 自動テスト時は描画省略
-  const top = G.players[1], bot = G.players[0];
+  const bot = G.players[ONLINE ? ME : 0], top = opp(bot); // オンラインでは自分を常に下側に表示
   let over = '';
   if (G.phase === 'over') {
     const w = G.players[G.winner];
-    over = `<div class="over"><div class="w">${w.hero.art}</div><h1>${isCPU(w) ? 'CPU' : 'P' + (w.idx + 1)} ${w.hero.name} の勝利！</h1><div>ラウンド${G.round}で決着</div>
-      <div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div></div>`;
+    over = `<div class="over"><div class="w">${w.hero.art}</div><h1>${ONLINE ? (w.idx === ME ? 'あなたの勝利！' : '相手の勝利…') : `${plabel(w)} ${w.hero.name} の勝利！`}</h1><div>${ONLINE ? w.hero.name + ' の勝ち　／　' : ''}ラウンド${G.round}で決着</div>
+      ${ONLINE ? `<div style="display:flex;gap:12px"><button class="primary" onclick="netAgain()">もう一度対戦（ヒーロー選択へ）</button><button onclick="toTitle()">やめる（タイトルへ）</button></div>${NET && NET.oppAgain ? '<div style="color:#ffd65a">相手はもう一度遊ぶ準備ができています</div>' : ''}`
+        : `<div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div>`}</div>`;
   }
   app.innerHTML = `<div class="game"><div class="board">${panelHTML(top)}${centerHTML()}${panelHTML(bot)}</div>
     <div class="side"><div class="prevslot">カードにマウスを乗せると拡大</div>
-      <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm('タイトルに戻りますか？'))toTitle()">🏠</button></div>
+      <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button></div>
       <div class="log">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div></div></div>${over}`;
 }
 function rematch() { startGame(G.picks[0], G.picks[1], G.cpus); }
-function toTitle() { SCREEN = 'title'; G = null; M = null; renderModal(); render(); }
+function toTitle() { netClose(); SCREEN = 'title'; G = null; M = null; renderModal(); render(); }
 function titleHTML() {
   return `<div class="title"><h1>七英札闘</h1><div class="en">SEVEN ARCANA DUEL</div>
     <div class="heroes">${HERO_ORDER.map(k => HEROES[k].art).join('')}</div>
-    <div style="color:#bbb;line-height:1.7">1台のPCで遊ぶ2人対戦デッキ構築カードゲーム<br>手札は丸見え。それでも読み合え。</div>
+    <div style="color:#bbb;line-height:1.7">1台のPCでも、オンラインでも遊べる2人対戦デッキ構築カードゲーム<br>手札は丸見え。それでも読み合え。</div>
     <div style="display:flex;gap:12px"><button class="primary" style="font-size:18px;padding:12px 30px" onclick="toSelect('pvp')">👥 2人対戦</button>
     <button class="primary" style="font-size:18px;padding:12px 30px" onclick="toSelect('cpu')">🤖 CPU戦</button>
+    <button class="primary" style="font-size:18px;padding:12px 30px" onclick="toLobby()">🌐 オンライン対戦</button>
     <button style="font-size:16px" onclick="G=G||{seals:new Set(),log:[]};showRules()">📜 ルール</button></div></div>`;
 }
 function toSelect(mode) { MODE = mode; SCREEN = 'select'; SEL = []; M = null; renderModal(); render(); }
@@ -1480,6 +1510,7 @@ function selectHTML() {
       <button class="danger" onclick="startCpu(3)">つよい<small>読み合いを考える＋HP+3・コイン+2</small></button></div>
       <div style="text-align:center;margin-top:20px"><button onclick="SEL.pop();render()">← 戻る</button></div></div>`;
   }
+  if (MODE === 'online') return onlineSelectHTML();
   const label = MODE === 'cpu' ? (who === 0 ? '<span style="color:#4a9cff">あなた</span>のヒーロー' : '<span style="color:#ff7a5a">CPU</span>のヒーロー')
     : (who === 0 ? '<span style="color:#4a9cff">P1</span> のヒーロー' : '<span style="color:#ff7a5a">P2</span> のヒーロー');
   const rnd = MODE === 'cpu' && who === 1 ? `<div style="text-align:center;margin-bottom:10px"><button onclick="pickHero(rand(HERO_ORDER))">🎲 ランダム</button></div>` : '';
@@ -1489,11 +1520,222 @@ function selectHTML() {
   <div style="text-align:center;margin-top:14px"><button onclick="toTitle()">← タイトルへ</button></div></div>`;
 }
 function pickHero(k) {
+  if (MODE === 'online') { netPick(k); return; }
   SEL.push(k);
   if (MODE === 'pvp' && SEL.length === 2) startGame(SEL[0], SEL[1]);
   else render();
 }
 function startCpu(lv) { startGame(SEL[0], SEL[1], [null, lv]); }
+
+// ================= online (PeerJS / WebRTC) =================
+// 仕組み：両者が同じシード値で同じゲームを動かし、「誰が何をクリックしたか」だけを送り合う。
+// 入力できるのは常に片方だけ（自分のターン、または自分への選択肢が出ているとき）なので、
+// 操作の順番が両者で一致し、同じ結果になる。
+var NET = null, NET_APPLYING = false, NET_DEPTH = 0;
+const NET_PREFIX = 'seven-arcana-duel-';
+const NET_MAIN = ['handClick', 'dinoClick', 'useActive', 'endTurnClick', 'buy', 'purify', 'sealClick', 'skipSeal'];
+const NET_MODAL = ['pickToggle', 'modalOk', 'modalCancel', 'optPick'];
+const NET_ALL = [...NET_MAIN, ...NET_MODAL, 'unsealBtn'];
+// 自分だけが見ている画面（ルール・山札確認・道具屋）
+function localModal(m) { return !!m && (m.view || m.type === 'html' || m.type === 'shop'); }
+// 自分専用のシグナリング設定（?peerhost=example.com:443 など）。通常は PeerJS の無料サーバーを使う
+function peerOpts() {
+  const h = new URLSearchParams(location.search).get('peerhost'); if (!h) return { debug: 0 };
+  const [host, port] = h.split(':'); return { host, port: +(port || 443), path: '/', secure: (port || '443') === '443', debug: 0 };
+}
+// その操作を、その人（actor）が今行える状態か
+function netReady(n, actor, args) {
+  if (!G || G.phase === 'over') return false;
+  const gameModal = M && !localModal(M) && M.res && M.who && M.who.idx === actor;
+  const idle = !G.busy && (G.phase === 'main' || G.phase === 'intimidate') && G.turn === actor;
+  if (NET_MODAL.includes(n)) return !!gameModal && (n === 'optPick' ? M.type === 'option' : M.type === 'choose');
+  if (n === 'unsealBtn') return args[0] === actor && (gameModal || (idle && G.phase === 'main' && (!M || localModal(M))));
+  return idle;
+}
+function netInstall() {
+  for (const n of NET_ALL) {
+    const orig = window[n];
+    window[n] = function (...args) {
+      if (!ONLINE || NET_DEPTH > 0) return orig.apply(this, args);
+      // ルールや山札確認など、自分だけの画面の操作は送らない
+      if (NET_MODAL.includes(n) && localModal(M)) return orig.apply(this, args);
+      const a = n === 'unsealBtn' ? args.slice(1) : args;
+      if (!netReady(n, ME, a)) { if (n === 'unsealBtn' && args[0]) args[0].stopPropagation(); return; }
+      // 道具屋を開いている間は、購入とお祓いだけ受け付ける
+      if (NET_MAIN.includes(n) && M && !(M.type === 'shop' && (n === 'buy' || n === 'purify'))) return;
+      netSend({ t: 'act', n, a });
+      NET_DEPTH++;
+      try { return orig.apply(this, args); } finally { NET_DEPTH--; }
+    };
+    window[n].orig = orig;
+  }
+  setInterval(netPump, 50);
+}
+// 相手の操作を、こちらの画面が同じ状態になったら順番に適用する
+function netPump() {
+  if (!NET || !ONLINE) return;
+  let guard = 0;
+  while (NET.q.length && guard++ < 50) {
+    const m = NET.q[0], actor = 1 - ME;
+    if (!netReady(m.n, actor, m.a)) break;
+    NET.q.shift();
+    if (!NET_MODAL.includes(m.n) && m.n !== 'unsealBtn' && M && localModal(M)) { M = null; renderModal(); } // 開いていたルール等は閉じる
+    const args = m.n === 'unsealBtn' ? [{ stopPropagation() {} }, ...m.a] : m.a;
+    NET_DEPTH++; NET_APPLYING = true;
+    try { window[m.n].orig(...args); } catch (e) { console.error(e); } finally { NET_DEPTH--; NET_APPLYING = false; }
+  }
+}
+// ズレ検出：ターン開始時の状態を要約して送り合う
+function netHash() {
+  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp])])]);
+  let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h;
+}
+function netCheck() {
+  const k = G.round + '-' + G.turn, h = netHash();
+  NET.hashes[k] = h; netSend({ t: 'hash', k, h }); netCompare(k);
+}
+function netCompare(k) {
+  const a = NET.hashes[k], b = NET.oppHashes[k];
+  if (a === undefined || b === undefined) return;
+  if (a !== b && !NET.desync) { NET.desync = true; console.warn('desync at', k); log('⚠ 相手の画面と状態がずれた可能性があります。再戦をおすすめします', 'dmg'); render(); }
+}
+function netSend(msg) { if (NET && NET.conn && NET.conn.open) NET.conn.send(msg); }
+function netClose() {
+  if (!NET) return;
+  const n = NET; NET = null; ONLINE = false; RNG = Math.random; ME = 0;
+  try { n.conn && n.conn.close(); } catch (e) {}
+  try { n.peer && n.peer.destroy(); } catch (e) {}
+  document.getElementById('netlost').style.display = 'none';
+}
+function netLost() {
+  if (!NET || NET.closing) return;
+  NET.lost = true;
+  if (SCREEN === 'online') { NET.status = '接続できませんでした。もう一度お試しください'; NET.err = true; render(); return; }
+  document.getElementById('netlost').style.display = 'flex';
+}
+function newCode() { const ch = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += ch[Math.floor(Math.random() * ch.length)]; return s; }
+function netFresh(role) {
+  netClose();
+  NET = { role, peer: null, conn: null, q: [], hashes: {}, oppHashes: {}, myPick: null, oppPick: null, status: '', err: false, code: '', oppAgain: false };
+}
+function netHost() {
+  if (typeof Peer === 'undefined') { netFresh('none'); NET.status = '通信ライブラリを読み込めませんでした（ネット接続を確認してください）'; NET.err = true; render(); return; }
+  netFresh('host'); NET.code = newCode(); NET.status = 'サーバーに接続中…'; render();
+  const peer = new Peer(NET_PREFIX + NET.code, peerOpts()); NET.peer = peer;
+  peer.on('open', () => { if (NET && NET.peer === peer) { NET.status = '相手の参加を待っています…'; render(); } });
+  peer.on('connection', conn => {
+    if (!NET || NET.peer !== peer || NET.conn) { conn.close(); return; }
+    netSetup(conn);
+  });
+  peer.on('error', e => {
+    if (!NET || NET.peer !== peer) return;
+    if (e.type === 'unavailable-id') { netHost(); return; } // 合言葉がかぶったら作り直す
+    if (NET.conn) { netLost(); return; }
+    NET.status = 'エラー：' + (e.type || e.message); NET.err = true; render();
+  });
+}
+function netJoin(code) {
+  code = (code || '').trim().toUpperCase();
+  if (!code) return;
+  if (typeof Peer === 'undefined') { netFresh('none'); NET.status = '通信ライブラリを読み込めませんでした（ネット接続を確認してください）'; NET.err = true; render(); return; }
+  netFresh('guest'); NET.code = code; NET.status = `部屋「${code}」に接続中…`; render();
+  const peer = new Peer(peerOpts()); NET.peer = peer;
+  peer.on('open', () => { if (NET && NET.peer === peer) netSetup(peer.connect(NET_PREFIX + code, { reliable: true, serialization: 'json' })); });
+  peer.on('error', e => {
+    if (!NET || NET.peer !== peer) return;
+    if (NET.conn && NET.conn.open) { netLost(); return; }
+    NET.status = e.type === 'peer-unavailable' ? `部屋「${code}」が見つかりません。合言葉を確認してください` : 'エラー：' + (e.type || e.message);
+    NET.err = true; render();
+  });
+}
+function netSetup(conn) {
+  NET.conn = conn;
+  conn.on('open', () => {
+    if (!NET || NET.conn !== conn) return;
+    netSend({ t: 'hello', v: 1 });
+    MODE = 'online'; SCREEN = 'select'; M = null; renderModal(); render();
+  });
+  conn.on('data', netRecv);
+  conn.on('close', netLost);
+  conn.on('error', netLost);
+}
+function netRecv(m) {
+  if (!NET) return;
+  switch (m.t) {
+    case 'act': NET.q.push(m); netPump(); break;
+    case 'hash': NET.oppHashes[m.k] = m.h; netCompare(m.k); break;
+    case 'pick': NET.oppPick = m.h; if (SCREEN === 'select') render(); netMaybeStart(); break;
+    case 'again': NET.oppAgain = true; NET.oppPick = null; render(); break;
+    case 'start': netStart(m); break;
+    case 'bye': NET.closing = true; document.getElementById('netlost').style.display = 'flex'; break;
+  }
+}
+function netPick(k) {
+  if (!NET) return;
+  NET.myPick = k; netSend({ t: 'pick', h: k }); render(); netMaybeStart();
+}
+// ホストが両者のヒーローがそろったのを確認して開始の合図を送る
+function netMaybeStart() {
+  if (!NET || NET.role !== 'host' || !NET.myPick || !NET.oppPick || SCREEN !== 'select') return;
+  const hostIdx = Math.random() < 0.5 ? 0 : 1; // 先攻はランダム
+  const heroes = []; heroes[hostIdx] = NET.myPick; heroes[1 - hostIdx] = NET.oppPick;
+  const m = { t: 'start', seed: Math.floor(Math.random() * 4294967296), heroes, hostIdx };
+  netSend(m); netStart(m);
+}
+function netStart(m) {
+  ONLINE = true; ME = NET.role === 'host' ? m.hostIdx : 1 - m.hostIdx;
+  RNG = seeded(m.seed);
+  Object.assign(NET, { q: [], hashes: {}, oppHashes: {}, desync: false, myPick: null, oppPick: null, oppAgain: false });
+  document.getElementById('netlost').style.display = 'none';
+  startGame(m.heroes[0], m.heroes[1]);
+  log(G.turn === ME ? 'あなたが先攻です' : '相手が先攻です', 'sys'); render();
+}
+function netAgain() {
+  if (!NET) return;
+  netSend({ t: 'again' });
+  NET.myPick = null; MODE = 'online'; SCREEN = 'select'; G = null; M = null; renderModal(); render();
+}
+function toLobby() { netClose(); SCREEN = 'online'; MODE = 'online'; M = null; renderModal(); render(); }
+function copyInvite() {
+  const url = location.origin + location.pathname + '?room=' + NET.code;
+  const done = () => toast('招待リンクをコピーしました');
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('このリンクを相手に送ってください', url));
+  else prompt('このリンクを相手に送ってください', url);
+}
+function lobbyHTML() {
+  const n = NET;
+  let body;
+  if (n && n.role === 'host' && !n.err) {
+    body = `<div class="box"><div>合言葉</div><div class="code">${n.code}</div>
+      <div class="row"><button class="primary" onclick="copyInvite()">🔗 招待リンクをコピー</button></div>
+      <div class="st" style="margin-top:10px">${n.status}</div>
+      <div style="color:#999;font-size:12px">相手に合言葉か招待リンクを送ってください</div></div>
+      <button onclick="toLobby()">キャンセル</button>`;
+  } else if (n && n.role === 'guest' && !n.err) {
+    body = `<div class="box"><div class="st">${n.status}</div></div><button onclick="toLobby()">キャンセル</button>`;
+  } else {
+    body = `<div class="row">
+      <div class="box"><div style="margin-bottom:10px">友だちを招待する</div><button class="primary" style="font-size:18px;padding:10px 26px" onclick="netHost()">🏠 部屋を作る</button></div>
+      <div class="box"><div style="margin-bottom:10px">合言葉で参加する</div>
+        <div class="row"><input id="joincode" maxlength="5" placeholder="ABCDE" onkeydown="if(event.key==='Enter')netJoin(this.value)"><button class="primary" onclick="netJoin(document.getElementById('joincode').value)">参加</button></div></div></div>
+      ${n && n.err ? `<div class="st err">${n.status}</div>` : ''}`;
+  }
+  return `<div class="lobby"><h2>🌐 オンライン対戦</h2><div style="color:#aaa">別々の端末から、友だちとネット越しに対戦できます</div>${body}
+    <button onclick="toTitle()">← タイトルへ</button></div>`;
+}
+function onlineSelectHTML() {
+  const mine = NET && NET.myPick, theirs = NET && NET.oppPick;
+  const st = mine ? (theirs ? 'まもなく開始…' : `あなた：${HEROES[mine].name}　／　相手が選んでいます…`) : (theirs ? '相手は選び終わりました' : '');
+  return `<div class="select"><h2><span style="color:#4a9cff">あなた</span>のヒーローを選んでください</h2>
+  <div style="text-align:center;color:#ffd65a;margin-bottom:10px;min-height:1.4em">${st}　<span style="color:#888;font-size:12px">（相手が何を選んだかは開始まで秘密）</span></div>
+  <div class="hgrid">${HERO_ORDER.map(k => { const h = HEROES[k]; const pk = mine === k ? '<div class="picked">あなた</div>' : '';
+    return `<div class="hcard" style="--pc:${h.color}" onclick="pickHero('${k}')">${pk}<div class="top"><div class="portrait">${h.art}</div><div><div class="hname">${h.name}<small>${h.title}</small></div><div class="hp">❤ HP ${h.hp}　<span style="color:#ccc;font-weight:normal">難易度 ${h.diff}</span></div></div></div>${heroDetailHTML(h)}</div>`; }).join('')}</div>
+  <div style="text-align:center;margin-top:14px"><button onclick="if(confirm('対戦をやめてタイトルに戻りますか？'))toTitle()">← やめる</button></div></div>`;
+}
+window.addEventListener('beforeunload', () => { if (NET && NET.conn && NET.conn.open) try { NET.conn.send({ t: 'bye' }); } catch (e) {} });
+netInstall();
+// 招待リンク（?room=XXXXX）から開いたら自動で参加
+{ const room = new URLSearchParams(location.search).get('room'); if (room) { SCREEN = 'online'; MODE = 'online'; setTimeout(() => netJoin(room), 0); } }
 
 // card preview on hover
 document.addEventListener('mouseover', e => {
