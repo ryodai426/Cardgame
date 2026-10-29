@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>七英札闘 Seven Arcana Duel</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -50,6 +50,7 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .dino.ready{cursor:pointer;box-shadow:0 0 10px #ffd65a}
 .dino.ready:hover{transform:translateY(-3px)}
 .dino.tired{opacity:.6}
+.dino.weapon{border-color:#c9d6e8;background:linear-gradient(#2a3242,#11141c)}
 .dart{font-size:32px;line-height:1.2}
 .dname{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px}
 .dhp{width:100%;height:13px;background:#3a1010;border-radius:6px;position:relative;overflow:hidden;margin:3px 0}
@@ -147,7 +148,147 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .over{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:40}
 .over h1{font-size:46px;color:#f0d080;margin:0}
 .over .w{font-size:80px}
+.mbar{display:none}
+.card{-webkit-touch-callout:none;-webkit-user-select:none}
+/* ================= スマホ縦画面 ================= */
+@media (max-width: 760px) and (orientation: portrait) {
+  html,body{height:100%;touch-action:manipulation}
+  body{font-size:12px}
+  #app{height:100dvh}
+  .game{display:block;height:100%}
+  .side{display:none}
+  .board{display:flex;flex-direction:column;height:100%;gap:4px;padding:4px 4px calc(4px + env(safe-area-inset-bottom))}
+  .mbar{display:flex;gap:4px;align-items:center;flex:none}
+  .mbar button{padding:4px 8px;font-size:12px}
+  .mbar .hint{flex:1;color:#888;font-size:10.5px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .panel{flex-direction:column;gap:4px;padding:5px;border-radius:10px;flex:none}
+  .panel.bot{flex:1 1 auto;min-height:0}
+  .info{width:auto;flex-direction:row;flex-wrap:wrap;align-items:center;gap:3px 8px}
+  .info .hrow{flex:none;gap:6px}
+  .info .hpbar{flex:1 1 110px;height:14px}
+  .hpbar span{line-height:13px;font-size:10.5px}
+  .info .res{flex:1 1 100%;gap:2px 9px;font-size:11.5px}
+  .info .passive{display:none}
+  .portrait{width:34px;height:34px;font-size:20px;border-width:1.5px}
+  .hname{font-size:13px}.hname small{display:none}
+  .abil{padding:2px 6px;font-size:10.5px}.abil small{font-size:9px}
+  .hand{flex:none;padding:3px 2px 5px;gap:5px;align-items:flex-start}
+  .panel.top .card{--s:.6}
+  .panel.bot .card{--s:.8}
+  .panel.bot .hand{flex:1 1 auto;min-height:0;flex-wrap:wrap;justify-content:center;align-content:flex-start;overflow-x:hidden;overflow-y:auto;padding-top:8px}
+  .field{border:none;padding:0;gap:4px;align-self:flex-start}
+  .dino{width:60px;height:96px;font-size:9px;padding:2px}
+  .dart{font-size:22px}.dname{max-width:56px}.dst{font-size:11px}
+  .card .ubtns{bottom:2.6em}
+  .card .ubtns button{font-size:11px;padding:3px 4px}
+  .card .ulbl{bottom:6.2em;font-size:10px}
+  .center{grid-template-columns:1fr auto;grid-template-areas:"info btns" "stage stage";gap:4px 8px;padding:6px 8px;min-height:0;flex:none;border-radius:10px}
+  .tinfo{grid-area:info;min-width:0}.tinfo .big{font-size:14px}.tinfo .inst{margin-top:2px;font-size:11px;line-height:1.4}
+  .cbtns{grid-area:btns;gap:5px}.cbtns button{padding:7px 10px;font-size:12px}
+  .stage{grid-area:stage;min-height:0;gap:8px;justify-content:flex-start}
+  .stage .note{display:none}
+  .stage .mini .card{--s:.5}
+  .stage .vs{font-size:11px}.stage .vs .n{font-size:20px}.stage .res{font-size:12px}
+  #modal.show{align-items:flex-end}
+  .mbox{max-width:100vw;width:100vw;max-height:88dvh;border-radius:14px 14px 0 0;padding:10px 10px calc(10px + env(safe-area-inset-bottom));gap:6px}
+  .mtitle{font-size:15px}.msub{font-size:12px;line-height:1.45}
+  .mcards{gap:6px;max-height:none;flex:1 1 auto;min-height:0;justify-content:center;padding:6px 0}
+  .mcards .card{--s:.92}
+  .mbtns{justify-content:stretch}.mbtns button{flex:1;padding:11px 8px;font-size:14px}
+  .msum{font-size:13px}
+  .shoprow{gap:8px;justify-content:center}.shopitem .card{--s:.88}
+  .rules{max-height:none;font-size:12px}
+  #preview{inset:0;width:auto;height:auto;top:0;right:0;display:none;background:rgba(5,3,10,.6);z-index:85}
+  #preview.show{display:flex}
+  .title{gap:12px;padding:12px}
+  .title h1{font-size:44px}.title .heroes{font-size:30px;letter-spacing:.1em}
+  .title > div:last-child{flex-wrap:wrap;justify-content:center}
+  .title > div:last-child button{font-size:16px!important;padding:12px 18px!important;flex:1 1 40%}
+  .select{padding:10px}.select h2{font-size:18px}
+  .hgrid{grid-template-columns:1fr;gap:8px}
+  .diff{flex-direction:column;align-items:stretch;padding:0 10px}
+  .over{padding:16px;text-align:center}.over h1{font-size:32px}.over .w{font-size:60px}
+  .over > div:last-child, .over > div:nth-last-child(2){flex-wrap:wrap;justify-content:center}
+  .lobby{padding:12px}.lobby .box{min-width:0;width:100%}.lobby .code{font-size:38px}
+  .waitbox{font-size:12px;padding:6px 12px}
+  .log div{font-size:12px}
+}
+/* ================= スマホ横画面 ================= */
+@media (max-height: 500px) and (orientation: landscape) {
+  html,body{height:100%;touch-action:manipulation}
+  body{font-size:11.5px}
+  #app{height:100dvh}
+  .game{display:block;height:100%}
+  .side{display:none}
+  .board{display:grid;height:100%;gap:4px;padding:4px max(4px, env(safe-area-inset-right)) 4px max(4px, env(safe-area-inset-left));
+    grid-template-columns:minmax(0,1fr) 172px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"top bar" "bot center"}
+  .panel.top{grid-area:top}.panel.bot{grid-area:bot;min-height:0}
+  .mbar{grid-area:bar;display:grid;grid-template-columns:1fr 1fr;gap:4px;align-content:start}
+  .mbar button{padding:5px 4px;font-size:11.5px}
+  .mbar .hint{grid-column:1 / -1;color:#888;font-size:10px;text-align:center}
+  .panel{gap:6px;padding:4px 6px;border-radius:10px;min-height:0}
+  .info{width:148px;gap:2px}
+  .info .hrow{gap:5px}
+  .portrait{width:30px;height:30px;font-size:18px;border-width:1.5px}
+  .hname{font-size:12.5px}.hname small{display:none}
+  .info .hpbar{height:13px}.hpbar span{line-height:12px;font-size:10px}
+  .info .res{gap:1px 7px;font-size:11px}
+  .info .passive{display:none}
+  .abil{padding:2px 5px;font-size:10px}.abil small{font-size:8.5px}
+  .hand{padding:3px 2px;gap:4px}
+  .panel.top .card{--s:.55}
+  .panel.bot .card{--s:.74}
+  .panel.bot .hand{flex-wrap:wrap;align-content:flex-start;overflow-x:hidden;overflow-y:auto;align-items:flex-start;padding-top:7px}
+  .field{gap:3px;padding:0 3px;align-self:center}
+  .dino{width:56px;height:88px;font-size:8.5px;padding:2px}
+  .dart{font-size:20px}.dname{max-width:52px}.dst{font-size:10.5px}
+  .card .ubtns{bottom:2.6em}
+  .card .ubtns button{font-size:10.5px;padding:2px 3px}
+  .card .ulbl{bottom:6.4em;font-size:10px}
+  .center{grid-area:center;display:flex;flex-direction:column;gap:4px;padding:6px;min-height:0;overflow-y:auto;border-radius:10px}
+  .tinfo .big{font-size:13px}.tinfo .inst{margin-top:2px;font-size:10.5px;line-height:1.35}
+  .tinfo .inst button{margin-top:3px!important}
+  .stage{min-height:0;gap:6px;justify-content:flex-start;flex:1 1 auto}
+  .stage .note{display:none}
+  .stage .mini .card{--s:.45}
+  .stage .defs{display:none}
+  .stage .vs{font-size:10.5px}.stage .vs .n{font-size:17px}.stage .res{font-size:11px}
+  .cbtns{gap:4px;margin-top:auto}.cbtns button{padding:7px 6px;font-size:12px}
+  #modal.show{align-items:center}
+  .mbox{max-width:96vw;max-height:96dvh;padding:8px 12px;gap:5px}
+  .mtitle{font-size:14px}.msub{font-size:11px;line-height:1.4}
+  .mcards{gap:6px;max-height:none;flex:1 1 auto;min-height:0;padding:4px 0}
+  .mcards .card{--s:.74}
+  .mbtns button{padding:7px 16px;font-size:13px}
+  .msum{font-size:12px}
+  .shoprow{gap:6px;padding:4px 2px 10px}.shopitem .card{--s:.72}
+  .rules{max-height:72dvh;font-size:11.5px}
+  #preview{inset:0;width:auto;height:auto;top:0;right:0;display:none;background:rgba(5,3,10,.6);z-index:85}
+  #preview.show{display:flex}
+  #preview .card.big{--s:2}
+  .title,.lobby{justify-content:flex-start;overflow-y:auto;padding:14px;gap:10px}
+  .title h1{font-size:36px}.title .heroes{font-size:26px;letter-spacing:.05em}
+  .title > div:last-child button{font-size:15px!important;padding:9px 18px!important}
+  .lobby h2{font-size:22px}.lobby .code{font-size:32px}.lobby .box{padding:10px 16px}
+  .select{padding:8px 12px}.select h2{font-size:17px;margin-bottom:6px}
+  .hgrid{gap:8px}
+  .diff{margin-top:12px}.diff button{padding:10px 18px;font-size:15px}
+  .over{gap:10px}.over h1{font-size:30px}.over .w{font-size:50px}
+  .waitbox{font-size:12px;padding:5px 12px}
+}
+#modal.wait{display:block;position:fixed;inset:auto 0 auto 0;top:8px;pointer-events:none;z-index:45}
+.waitbox{margin:0 auto;width:max-content;max-width:90vw;background:#000c;border:2px solid var(--pc,#8a7340);border-radius:10px;padding:8px 18px;font-size:14px;color:#f3dfa8;box-shadow:0 0 16px -4px var(--pc,#000)}
+.lobby{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center}
+.lobby h2{margin:0;color:#f0d080;font-size:28px}
+.lobby .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center}
+.lobby .box{background:rgba(0,0,0,.35);border:1px solid #3a3150;border-radius:12px;padding:16px 22px;min-width:300px}
+.lobby .code{font-size:44px;font-weight:bold;letter-spacing:.25em;color:#fff;margin:6px 0}
+.lobby input{font-size:24px;padding:6px 10px;width:170px;text-align:center;letter-spacing:.2em;text-transform:uppercase;background:#120f1d;color:#fff;border:1px solid #8a7340;border-radius:6px}
+.lobby .st{color:#ccc;line-height:1.6;min-height:1.6em}
+.lobby .err{color:#ff8a8a}
+#netlost{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:90;font-size:16px}
 </style>
+<script src="https://unpkg.com/peerjs@1.5.5/dist/peerjs.min.js"></script>
 </head>
 <body>
 <div id="app"></div>
@@ -155,13 +296,17 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 <div id="preview"></div>
 <div id="fxl"></div>
 <div id="toast"></div>
+<div id="netlost"><div style="font-size:22px;color:#ff8a8a">⚠ 相手との接続が切れました</div><button class="primary" onclick="toTitle()">タイトルへ</button></div>
 <script>
 // ================= utilities =================
 let ANIM = 1;
+// ゲーム進行用の乱数。オンライン対戦では両者で同じシード値の乱数を使い、同じ結果になるようにする
+let RNG = Math.random;
+const seeded = a => () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 // 待機中にゲームが入れ替わったら（タイトルに戻って新しく始めた等）、古い処理はそこで打ち切る
 class Aborted extends Error {}
 const sleep = ms => { const g = G; return new Promise(r => setTimeout(r, ms * ANIM)).then(() => { if (G !== g) throw new Aborted(); }); };
-const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(RNG() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
 const rand = a => a[Math.floor(Math.random() * a.length)];
 let UID = 1;
 const mk = id => ({ uid: UID++, id });
@@ -172,7 +317,11 @@ const cur = () => G.players[G.turn];
 const opp = p => G.players[1 - p.idx];
 const isCPU = p => !!(G && G.cpus && G.cpus[p.idx]);
 const lvOf = p => G.cpus[p.idx];
-const pname = p => `${isCPU(p) ? 'CPU' : 'P' + (p.idx + 1)}(${p.hero.short})`;
+// オンライン対戦：ME＝自分のプレイヤー番号。相手側のプレイヤーは isRemote
+let ONLINE = false, ME = 0;
+const isRemote = p => ONLINE && !!p && p.idx !== ME;
+const plabel = p => ONLINE ? (p.idx === ME ? 'あなた' : '相手') : isCPU(p) ? 'CPU' : 'P' + (p.idx + 1);
+const pname = p => `${plabel(p)}(${p.hero.short})`;
 const removeFrom = (arr, x) => { const i = arr.indexOf(x); if (i >= 0) arr.splice(i, 1); return i >= 0; };
 const flatCards = arr => arr.flatMap(c => c.parts ? c.parts : [c]);
 // 威圧の解除コスト（CPU同士の自動対戦で調整）
@@ -412,9 +561,9 @@ const CARDS = {
   sandstorm: { hero: 'pharaoh', weather: true, name: '砂嵐', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🏜️', text: '【使用時】相手の手札を1枚まで追加で【威圧】\n【風化】', play: async x => sealMore(x.p, x.o, 1) },
   scarab: { hero: 'pharaoh', weather: true, name: 'スカラベの護符', type: 'skill', cost: 0, def: 2, dc: 0, price: 2, art: '🪲', text: '【使用時】コイン+2。1枚引く\n【風化】', play: async x => { gainCoins(x.p, 2); await draw(x.p, 1); } },
   mummy: { hero: 'pharaoh', weather: true, name: 'ミイラ兵', type: 'attack', cost: 1, atk: 3, def: 2, dc: 0, price: 2, art: '🧟', text: '【風化】' },
-  anubis: { hero: 'pharaoh', weather: true, name: 'アヌビスの裁き', type: 'attack', cost: 3, atk: 7, def: 1, dc: 0, price: 5, art: '⚖️', text: '【風化】' },
-  sungod: { hero: 'pharaoh', weather: true, name: '太陽神の光', type: 'skill', cost: 3, def: 1, dc: 0, price: 6, art: '☀️', text: '【使用時】相手に4ダメージ（防御不能）\n【風化】', play: async x => damage(x.o, 4, '太陽神の光') },
-  pyramid: { hero: 'pharaoh', weather: true, heal: true, name: 'ピラミッドの加護', type: 'skill', cost: 1, def: 6, dc: 1, price: 4, art: '🔺', text: '【使用時】HP3回復\n【風化】（防御に使った時は風化しない）', play: async x => heal(x.p, 3) },
+  anubis: { hero: 'pharaoh', weather: true, name: 'アヌビスの裁き', type: 'attack', cost: 3, atk: 8, def: 1, dc: 0, price: 5, art: '⚖️', text: '【風化】' },
+  sungod: { hero: 'pharaoh', weather: true, name: '太陽神の光', type: 'skill', cost: 3, def: 1, dc: 0, price: 6, art: '☀️', text: '【使用時】相手に5ダメージ（防御不能）\n【風化】', play: async x => damage(x.o, 5, '太陽神の光') },
+  pyramid: { hero: 'pharaoh', weather: true, heal: true, name: 'ピラミッドの加護', type: 'skill', cost: 1, def: 6, dc: 1, price: 4, art: '🔺', text: '【使用時】HP4回復\n【風化】（防御に使った時は風化しない）', play: async x => heal(x.p, 4) },
   treasure: { hero: 'pharaoh', weather: true, name: '王家の財宝', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '💎', text: '【使用時】コイン+4\n【風化】', play: async x => gainCoins(x.p, 4) },
   sphinx: { hero: 'pharaoh', name: 'スフィンクスの謎', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '🐈', text: '【使用時】山札の上3枚を見て1枚を手札に。残りは山札の上に戻す',
     play: async x => { refill(x.p); const top = x.p.deck.slice(-3).reverse(); if (!top.length) return;
@@ -516,6 +665,52 @@ const CARDS = {
     dino: { hp: 6, atk: 5, acost: 3, hit: async x => damage(x.o, 1, 'スピノサウルス') } },
   wakeroar: { hero: 'dino', needTired: true, name: '目覚めの咆哮', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '📢', text: '【使用時】待機中の恐竜1体を、このターン攻撃できるようにする',
     play: async x => { const tired = x.p.field.filter(d => d.exhausted); if (!tired.length) return; const dn = tired.length === 1 ? tired[0] : await chooseOption({ who: x.p, title: '目覚めさせる恐竜', options: tired.sort((a, b) => b.atk - a.atk).map(d => ({ label: `${d.art}${d.name}`, value: d })), ai: 'first' }); dn.exhausted = false; log(`${dn.name}が目を覚ました！`); render(); } },
+
+  // ---- 亡霊船長ヴァンデル（沈没＝自分の山札の上を捨て札へ。亡者は捨て札から使える） ----
+  cutlass: { hero: 'pirate', name: '錆びたカトラス', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🗡️', text: '【使用時】【沈没】1', play: async x => { await sink(x.p, 1); } },
+  bilge: { hero: 'pirate', name: '船底の大穴', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🕳️', text: '【使用時】【沈没】3', play: async x => { await sink(x.p, 3); } },
+  deckhand: { hero: 'pirate', undead: true, name: '溺れた水夫', type: 'attack', cost: 1, atk: 1, def: 1, dc: 0, price: 2, art: '💀', text: '【捨て札から】ATK+2',
+    play: async x => { if (x.grave) x.atk += 2; } },
+  doubloon: { hero: 'pirate', treasure: true, name: '呪いの金貨', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🪙', text: '【使用時】コイン+1\n【沈んだ時】コイン+2',
+    play: async x => gainCoins(x.p, 1), sunk: async x => gainCoins(x.p, 2) },
+  chest: { hero: 'pirate', treasure: true, name: '沈んだ宝箱', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🧰', text: '【使用時】コイン+2\n【沈んだ時】コイン+1。1枚引く',
+    play: async x => gainCoins(x.p, 2), sunk: async x => { gainCoins(x.p, 1); await draw(x.p, 1); } },
+  gunner: { hero: 'pirate', undead: true, name: '亡者の砲手', type: 'attack', cost: 2, atk: 2, def: 1, dc: 0, price: 4, art: '💣', text: '【捨て札から】ATK+3・防御不能',
+    graveUnblock: true, play: async x => { if (x.grave) x.atk += 3; } },
+  boarders: { hero: 'pirate', undead: true, name: '亡者の斬り込み隊', type: 'attack', cost: 3, atk: 3, def: 2, dc: 0, price: 5, art: '☠️', text: '【捨て札から】ATK+4。ヒット時 コイン+2',
+    play: async x => { if (x.grave) x.atk += 4; }, hit: async x => { if (x.grave) gainCoins(x.p, 2); } },
+  maelstrom: { hero: 'pirate', name: '大渦', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '🌀', text: '【使用時】【沈没】3。沈んだ【亡者】1枚につき、このターンの攻撃全てATK+1',
+    play: async x => { const s = await sink(x.p, 3); const n = s.filter(c => D(c).undead).length; if (n) { x.p.turnAtk += n; log(`亡者が騒ぐ…攻撃ATK+${n}`); } } },
+  locker: { hero: 'pirate', name: '深海の牢獄', type: 'skill', cost: 2, def: 1, dc: 0, price: 5, art: '🔒', text: '【使用時】相手の手札を1枚選んで捨てさせる。【沈没】1',
+    play: async x => { await forceDiscard(x.p, x.o, 1); await sink(x.p, 1); } },
+  kraken: { hero: 'pirate', name: '海魔クラーケン', type: 'attack', cost: 5, atk: 5, def: 1, dc: 0, price: 7, art: '🦑', text: '【使用時】捨て札の【亡者】1枚につきATK+1（最大+5）',
+    play: async x => { x.atk += Math.min(5, graveZombies(x.p).length); } },
+  idol: { hero: 'pirate', treasure: true, name: '呪われた黄金像', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '🏺', text: '【使用時】コイン+3。自分に1ダメージ\n【沈んだ時】コイン+3',
+    play: async x => { gainCoins(x.p, 3); await loseHp(x.p, 1, '黄金像の呪い'); }, sunk: async x => gainCoins(x.p, 3) },
+  ghostship: { hero: 'pirate', undead: true, name: '幽霊船の亡霊', type: 'attack', cost: 4, atk: 3, def: 2, dc: 0, price: 6, art: '👻', text: '【捨て札から】ATK+4。ヒット時 相手の手札を1枚選んで捨てさせる',
+    play: async x => { if (x.grave) x.atk += 4; }, hit: async x => { if (x.grave) await forceDiscard(x.p, x.o, 1); } },
+  anchorblow: { hero: 'pirate', name: '錨の一撃', type: 'attack', cost: 2, atk: 3, def: 3, dc: 0, price: 4, art: '⚓', text: '【防御時】【沈没】2', defend: async x => { await sink(x.p, 2); } },
+
+  // ---- 白虎の侍シグレ（白虎刀は手札に入らない専用武器） ----
+  byakko: { hero: 'samurai', name: '白虎刀', type: 'attack', cost: 2, atk: 3, def: 0, dc: 0, price: 0, art: '🗡️', text: 'シグレの愛刀。手札には入らない' },
+  whetstone: { hero: 'samurai', wbuff: 'perm', name: '砥石', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🪨', text: '【使用時】白虎刀のATK+1（ずっと続く）', play: async x => sharpen(x.p, 1) },
+  ninotachi: { hero: 'samurai', wbuff: 'swing', name: '二の太刀', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '⚔️', text: '【使用時】このターン、白虎刀をもう1回振れる',
+    play: async x => { x.p.wSwings += 1; log('二の太刀：白虎刀をもう1回振れる'); } },
+  kiai: { hero: 'samurai', wbuff: 'atk', name: '気合', type: 'skill', cost: 0, def: 2, dc: 0, price: 2, art: '😤', text: '【使用時】このターン、白虎刀のATK+2', play: async x => { x.p.wTurnAtk += 2; } },
+  kesagiri: { hero: 'samurai', name: '袈裟斬り', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '🎋', text: '【使用時】このターン白虎刀で攻撃していればATK+2',
+    play: async x => { if (x.p.wUsed > 0) x.atk += 2; } },
+  tamahagane: { hero: 'samurai', wbuff: 'perm', name: '玉鋼', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '⛏️', text: '【使用時】白虎刀のATK+2（ずっと続く）', play: async x => sharpen(x.p, 2) },
+  sanren: { hero: 'samurai', wbuff: 'swing', name: '三段突き', type: 'skill', cost: 2, def: 1, dc: 0, price: 6, art: '🌪️', text: '【使用時】このターン、白虎刀を振れる回数+2',
+    play: async x => { x.p.wSwings += 2; log('三段突き：白虎刀を振れる回数+2'); } },
+  bushido: { hero: 'samurai', name: '武士道', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '🏯', text: '【使用時】コイン+1。このターン、白虎刀のヒット時コインさらに+1',
+    play: async x => { gainCoins(x.p, 1); x.p.wCoinBonus += 1; } },
+  battojutsu: { hero: 'samurai', name: '抜刀術', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '⚡', text: '【使用時】このターン、白虎刀の攻撃コスト-1。1枚引く',
+    play: async x => { x.p.wDisc += 1; await draw(x.p, 1); } },
+  yoroidoshi: { hero: 'samurai', wbuff: 'atk', name: '鎧通し', type: 'skill', cost: 1, def: 1, dc: 0, price: 5, art: '🎯', text: '【使用時】次の白虎刀の攻撃は防御不能。1枚引く',
+    play: async x => { x.p.wPierce = true; await draw(x.p, 1); } },
+  byakkoroar: { hero: 'samurai', wbuff: 'swing', name: '白虎の咆哮', type: 'skill', cost: 2, def: 1, dc: 0, price: 6, art: '🐯', text: '【使用時】白虎刀のATK+1（ずっと続く）。このターン、白虎刀をもう1回振れる',
+    play: async x => { sharpen(x.p, 1); x.p.wSwings += 1; } },
+  sayauke: { hero: 'samurai', name: '鞘受け', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🥢', text: '【防御時】白虎刀のATK+1（ずっと続く）', defend: async x => sharpen(x.p, 1) },
 };
 const NEUTRAL = ['sharp', 'heavy', 'thief', 'ironshield', 'thorn', 'incinerate', 'crystal', 'breath', 'counter', 'mikiri', 'goldbag', 'hammer', 'roar', 'potion', 'axe', 'reveal'];
 
@@ -617,13 +812,14 @@ Object.assign(HEROES, {
   pharaoh: { name: 'ファラオ ネフェルカ', short: 'ネフェルカ', title: '砂漠に君臨する王家の末裔', art: '👑', color: '#d9b44a', hp: 17, diff: '★★☆', sig: 'scepter',
     pool: ['anubis', 'sungod', 'pyramid', 'treasure', 'sphinx', 'deadbook', 'uraeus', 'goldcoffin'], draft: ['scepter', 'sandstorm', 'scarab', 'mummy'],
     passive: '【王家の威光】自分のカードが【風化】で破棄されるたびコイン+1。',
-    style: '強力だが使うと砂に還る【風化】カードを、王命で山札に戻して温存しながら戦う。',
-    actives: [{ name: '王命', cost: 'なし', text: '手札1枚を山札に戻し（ランダムな位置）、1枚引く（1ターン1回）',
-      can: p => p.hand.length > 0 && (p.used.ro || 0) < 1,
+    style: '使うと砂に還る代わりに強力な【風化】カードで攻める。砂に還ったカードはコインを払って冥府から呼び戻し、安く使い直せる。',
+    actives: [{ name: '冥府の帰還', cost: 'コイン（カードのマナ+1）', costNow: () => 'コイン2〜', text: '【風化】で砂に還った自分のカード1枚を、コイン（そのカードのマナコスト+1、最低2）を払って手札に戻す。戻したカードはマナコスト-1（1ターン1回）',
+      can: p => !p.used.a0 && p.weathered.some(c => p.coins >= recallCost(c)),
       use: async p => {
-        const s = await choose({ who: p, title: '王命：山札に戻すカード', cards: p.hand, min: 1, max: 1, cancelable: true, ai: 'worst' }); if (!s) return;
-        p.used.ro = (p.used.ro || 0) + 1; removeFrom(p.hand, s[0]); G.seals.delete(s[0].uid);
-        p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, s[0]); log(`「${D(s[0]).name}」を山札に戻した`); await draw(p, 1);
+        const s = await choose({ who: p, title: '冥府の帰還：手札に戻す風化カード', sub: `戻したカードはマナコスト-1になります（使うまで有効）　所持コイン🪙${p.coins}`, cards: p.weathered, min: 1, max: 1, cancelable: true, ai: 'best',
+          disabled: c => p.coins < recallCost(c) ? 'コイン不足' : null, extra: c => `<div class="price">🪙${recallCost(c)}</div>` }); if (!s) return;
+        const c = s[0]; p.used.a0 = 1; p.coins -= recallCost(c); removeFrom(p.weathered, c); removeFrom(G.trash, c);
+        c.costDown = (c.costDown || 0) + 1; p.hand.push(c); log(`「${D(c).name}」が冥府より帰還した（マナコスト-1）`, 'coin'); render();
       } }] },
   dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 15, diff: '★★★', sig: 'raptor',
     pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil', 'ankylo', 'spino', 'wakeroar'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
@@ -645,7 +841,68 @@ Object.assign(HEROES, {
       can: p => !p.used.a0 && !p.inferno && (p.burnCount >= 3 || p.mana >= 3),
       use: async p => { p.used.a0 = 1; if (p.burnCount >= 3) p.burnCount -= 3; else p.mana -= 3; p.inferno = true; log('イグニスは炎の化身となった！ 自傷は相手へ！', 'dmg'); fx(p.idx, '炎の化身!', 'dmg'); } }] },
 });
-const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro'];
+Object.assign(HEROES, {
+  pirate: { name: '深海の亡霊船長 ヴァンデル', short: 'ヴァンデル', title: '呪われた幽霊船の主', art: '🏴‍☠️', color: '#2fa39a', hp: 22, diff: '★★★', sig: 'cutlass',
+    pool: ['chest', 'gunner', 'boarders', 'maelstrom', 'locker', 'kraken', 'idol', 'ghostship', 'anchorblow'], draft: ['cutlass', 'bilge', 'deckhand', 'doubloon'],
+    passive: '【幽霊船】1ターンに1回、捨て札の【亡者】カードを「釣り上げ」で使える（使用後は山札の一番下へ戻る）。亡者は手札から使うと弱いが、捨て札から使うと【捨て札から】の効果で強くなる。',
+    style: '自分の山札を捨て札に【沈没】させ、沈んだ財宝でコインを稼ぎ、亡者を釣り上げて襲わせるヴィラン。',
+    actives: [
+      { name: '錨上げ', cost: 'コイン3（捨て札の財宝1枚につき-1）', costNow: p => `コイン${anchorCost(p)}`, text: 'このターン、捨て札から使うカードのマナコスト-2（1ターン1回）。捨て札の【財宝】1枚につき必要なコイン-1',
+        can: p => !p.used.a0 && !p.anchor && p.coins >= anchorCost(p),
+        use: async p => { p.used.a0 = 1; const c = anchorCost(p); p.coins -= c; p.anchor = true; log(`錨を上げろ！（🪙${c}）捨て札から使うカードのマナ-2`, 'coin'); fx(p.idx, '⚓錨上げ!', 'info'); render(); } },
+      { name: '釣り上げ', cost: 'カードのマナ', text: '捨て札の【亡者】1枚を使う（1ターン1回）',
+        can: p => !p.used.fish && graveZombies(p).some(c => graveCost(p, c) <= p.mana),
+        use: async p => {
+          p.discard = flatCards(p.discard);
+          const s = await choose({ who: p, title: '⚓ 釣り上げ：捨て札から使う【亡者】', sub: `捨て札から使うと【捨て札から】の効果が発動。使用後は山札の一番下へ。${p.anchor ? '（錨上げ中：マナ-2）' : ''}`,
+            cards: graveZombies(p), min: 1, max: 1, cancelable: true, ai: 'best', disabled: c => graveCost(p, c) > p.mana ? 'マナ不足' : null,
+            extra: c => `<div class="price" style="border-color:#6fc3ff;color:#6fc3ff">💧${graveCost(p, c)}</div>` });
+          if (!s) return;
+          p.used.fish = 1; await playCard(p, s[0], true);
+        } }] },
+  samurai: { name: '白虎の侍 シグレ', short: 'シグレ', title: '白虎刀を継ぐ剣客', art: '🐅', color: '#c9d6e8', hp: 18, diff: '★★☆', sig: 'whetstone',
+    pool: ['tamahagane', 'sanren', 'bushido', 'battojutsu', 'yoroidoshi', 'byakkoroar', 'sayauke', 'kesagiri'], draft: ['whetstone', 'ninotachi', 'kiai', 'kesagiri'],
+    passive: '【白虎刀】最初から専用武器「白虎刀」を持つ（ATK3・手札に入らない）。💧2で攻撃でき、基本は1ターン1回。カードでATKや振れる回数を強化する。【武士の誉れ】白虎刀の攻撃がヒットするたびコイン+1。',
+    style: '手札に頼らず振れる白虎刀を、砥石や玉鋼で鍛え上げていく。二の太刀で連続攻撃も。',
+    actives: [{ name: '白虎刀', cost: 'マナ2', costNow: p => `マナ${wCost(p)}`, text: '白虎刀で攻撃する（基本1ターン1回。場の白虎刀をタップしても同じ）',
+      can: p => p.wUsed < p.wSwings && p.mana >= wCost(p),
+      use: async p => weaponAttack(p) }] },
+});
+const recallCost = c => Math.max(2, CARDS[c.id].cost + 1);
+const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai'];
+// ---- 海賊：沈没・亡者 ----
+const ccost = (p, c) => Math.max(0, D(c).cost - (c.costDown || 0));
+const graveCost = (p, c) => Math.max(0, ccost(p, c) - (p.anchor ? 2 : 0));
+const graveZombies = p => flatCards(p.discard).filter(c => D(c).undead);
+const anchorCost = p => Math.max(0, 3 - flatCards(p.discard).filter(c => D(c).treasure).length);
+// 【沈没】自分の山札の上から捨て札へ（山札が尽きたら止まる。シャッフルはしない）
+async function sink(p, n) {
+  const out = [];
+  for (let i = 0; i < n && p.deck.length; i++) { const c = p.deck.pop(); p.discard.push(c); out.push(c); log(`${pname(p)}の「${D(c).name}」が捨て札に沈んだ`, 'trash'); }
+  render();
+  for (const c of out) if (D(c).sunk) { log(`【沈んだ時】「${D(c).name}」`, 'coin'); await D(c).sunk({ p, o: opp(p), card: c }); }
+  return out;
+}
+// ---- 侍：白虎刀 ----
+const wCost = p => Math.max(0, 2 - p.wDisc);
+function sharpen(p, n) { p.wAtk += n; log(`白虎刀を鍛えた（ATK${p.wAtk}）`); fx(p.idx, `🗡️+${n}`, 'info'); render(); }
+function syncWeapon(p) {
+  if (!p.wInst) return null;
+  p.wInst.fdef = { ...CARDS.byakko, atk: p.wAtk, cost: wCost(p), text: `シグレの愛刀（手札に入らない）\n今のATK${p.wAtk}／このターンあと${Math.max(0, p.wSwings - p.wUsed)}回${p.wPierce ? '\n次の攻撃は防御不能' : ''}` };
+  return p.wInst;
+}
+async function weaponAttack(p) {
+  syncWeapon(p); p.mana -= wCost(p); p.wUsed++;
+  const pierce = p.wPierce; p.wPierce = false;
+  await resolveAttack({ p, o: opp(p), card: p.wInst, atk: p.wAtk, dmg: 0, weapon: true, pierce });
+}
+function weaponHTML(p, main) {
+  syncWeapon(p);
+  const left = Math.max(0, p.wSwings - p.wUsed), can = main && left > 0 && wCost(p) <= p.mana;
+  return `<div class="dino weapon ${can ? 'ready' : ''} ${left ? '' : 'tired'}" data-cid="F${p.wInst.uid}" onclick="useActive(${p.idx},0)" title="白虎刀${can ? '：タップで攻撃' : ''}">
+    ${p.wPierce ? '<div class="dtag">防御不能</div>' : ''}<div class="dart">🗡️</div><div class="dname">白虎刀</div>
+    <div class="dst"><span class="atk">⚔${p.wAtk + (G.turn === p.idx ? p.wTurnAtk + p.turnAtk : 0)}</span> <span class="mana">💧${wCost(p)}</span></div><div class="dz">${G.turn === p.idx ? `あと${left}回` : `ATK${p.wAtk}`}</div></div>`;
+}
 const fullMoon = p => G.round % 2 === 1 || !!p.wolfForm;
 // 自傷：炎の化身中は相手が受ける
 async function selfBurn(p, n, src) {
@@ -697,7 +954,7 @@ async function dinoAttack(p, dn) {
 }
 function canPlay(p, c) {
   const d = D(c);
-  if (d.type === 'curse' || G.seals.has(c.uid) || d.cost > p.mana) return false;
+  if (d.type === 'curse' || G.seals.has(c.uid) || ccost(p, c) > p.mana) return false;
   if (d.type === 'summon' && p.field.length >= MAX_FIELD) return false;
   if (d.needDino && !p.field.length) return false;
   return true;
@@ -743,7 +1000,7 @@ function fx(pi, text, kind) {
   document.getElementById('fxl').appendChild(d); setTimeout(() => d.remove(), 1300);
 }
 let toastT;
-function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
+function toast(t) { if (NET_APPLYING) return; const e = document.getElementById('toast'); e.textContent = t; e.style.display = 'block'; clearTimeout(toastT); toastT = setTimeout(() => e.style.display = 'none', 1600); }
 
 // ================= core helpers =================
 async function damage(t, n, src = '', pierce = false) {
@@ -814,7 +1071,7 @@ async function steal(p, o) {
 function discardFromHand(p, c) { if (removeFrom(p.hand, c)) p.discard.push(c); }
 function addCard(p, id, where) {
   const c = mk(id);
-  if (where === 'deck') p.deck.splice(Math.floor(Math.random() * (p.deck.length + 1)), 0, c); else p.discard.push(c);
+  if (where === 'deck') p.deck.splice(Math.floor(RNG() * (p.deck.length + 1)), 0, c); else p.discard.push(c);
   log(`${pname(p)}の${where === 'deck' ? '山札' : '捨て札'}に「${CARDS[id].name}」が加わった`, 'trash');
 }
 const dcost = (p, c) => Math.max(0, (D(c).dc || 0) - (p.heroId === 'golem' ? 1 : 0));
@@ -865,9 +1122,13 @@ function closeModal() { M = null; renderModal(); render(); }
 function renderModal() {
   const el = document.getElementById('modal');
   if (!M) { el.className = ''; el.innerHTML = ''; return; }
-  el.className = 'show';
   const pc = M.who ? M.who.hero.color : '#c89b3c';
-  const head = M.who ? `<span class="pl" style="--pc:${pc}">${isCPU(M.who) ? 'CPU' : 'P' + (M.who.idx + 1)} ${M.who.hero.short}</span>` : '';
+  // オンライン：相手の選択中は、モーダルの代わりに上部へ小さく表示
+  if (isRemote(M.who) && !localModal(M)) {
+    el.className = 'wait'; el.innerHTML = `<div class="waitbox" style="--pc:${pc}">⏳ 相手が選択中… <span style="color:#aaa">${M.title}</span></div>`; return;
+  }
+  el.className = 'show';
+  const head = M.who ? `<span class="pl" style="--pc:${pc}">${plabel(M.who)} ${M.who.hero.short}</span>` : '';
   if (M.type === 'choose') {
     const min = Math.min(M.min, M.cards.filter(c => !(M.disabled && M.disabled(c))).length);
     M.sel = M.sel.filter(c => !(M.disabled && M.disabled(c)));
@@ -909,7 +1170,12 @@ function heroDetailHTML(h) {
   <p><span class="lbl">特徴</span><br>${h.style}</p>
   <p class="cards"><span class="lbl">獲得候補</span> ${h.draft.map(id => CARDS[id].name).join('・')}<br><span class="lbl">専用ショップ</span> ${h.pool.map(id => CARDS[id].name).join('・')}</p>`;
 }
+function showLog() {
+  if (!G || (M && M.res && !M.view)) return;
+  M = { type: 'html', title: '📃 ログ', html: `<div class="log" style="max-height:65vh;border:none">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div>` }; renderModal();
+}
 function showRules() {
+  if (M && M.res && !M.view) { toast('選択が終わってから開いてください'); return; }
   M = { type: 'html', title: '📜 ルール', html: `<div class="rules">
   <h3>勝利条件</h3><p>相手ヒーローのHPを0にすれば勝ち。</p>
   <h3>ターンの流れ</h3>
@@ -936,24 +1202,26 @@ function showRules() {
   <p><b>満月／新月</b>（ルガル）：奇数ラウンドは満月、偶数ラウンドは新月。画面中央に今の月を表示。<b>満月型</b>のカードは満月で強く新月では弱くなり、<b>新月型</b>はその逆。</p>
   <p><b>自傷</b>（イグニス）：使うと自分もダメージを受けるカード。自傷のたびに灼熱が溜まり、灼熱3で「炎の化身」を無料で発動できる（そのターンの自傷は相手が受ける）。</p>
   <p><b>エルフ</b>（リーフィア）：【エルフ】が付いた低コストカード。使った枚数に応じてドローや攻撃力が増える。</p>
-  <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。王命で山札に戻せば温存できる。</p>
+  <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。「冥府の帰還」（コイン2）で手札に呼び戻すと、そのカードのマナコストが1下がる。</p>
+  <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>【財宝】</b>が捨て札にあるほど「錨上げ」が安くなる。</p>
+  <p><b>白虎刀</b>（シグレ）：手札に入らない専用武器。場の白虎刀をタップ（または能力ボタン）で、💧2を払って攻撃（基本1ターン1回）。砥石・玉鋼でATKがずっと上がり、二の太刀などで振れる回数が増える。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
   <p><b>合成</b>（ギア）：手札2枚を1枚にまとめる。コスト・ATK・DEFは合計（コストは−1）、効果は全部発動。使用後は元のカードに分解されて捨て札へ。</p>
   <h3>デッキ構築</h3>
   <p>道具屋で買ったカードは捨て札へ。共通カード5枚＋自分のヒーロー専用カード3枚が並ぶ。<br><b>お祓い</b>（🪙3、1ターン1回）：手札1枚を破棄。</p>
   <p><b>破棄</b>はカードをゲームから除外する。弱いカードや呪いを破棄してデッキを圧縮しよう。</p>
   <p><b>呪い</b>：使用も防御もできず、引いた時に悪い効果。</p>
-  <h3>操作</h3><p>手札をクリックで使用。カードにマウスを乗せると右上に拡大表示。ヒーローの顔をクリックで詳細。山札・捨て札の数字クリックで中身を確認。威圧されたカードには解除ボタンが出る。</p>
+  <h3>操作</h3><p>手札をクリックで使用。カードにマウスを乗せると右上に拡大表示（スマホではカードを長押し）。ヒーローの顔をクリックで詳細。山札・捨て札の数字クリックで中身を確認。威圧されたカードには解除ボタンが出る。</p>
   </div>` };
   renderModal();
 }
 
 // ================= shop =================
-function openShop() { if (!G || G.busy || G.phase !== 'main' || M || isCPU(cur())) return; M = { type: 'shop' }; renderModal(); }
+function openShop() { if (!G || G.busy || G.phase !== 'main' || M || isCPU(cur()) || isRemote(cur())) return; M = { type: 'shop' }; renderModal(); }
 function shopHTML() {
   const p = cur();
   const row = (arr, src) => arr.map((c, i) => { const pr = price(p, D(c)); return `<div class="shopitem">${cardHTML(c)}<button ${p.coins >= pr ? '' : 'disabled'} onclick="buy('${src}',${i})">🪙${pr} 購入</button></div>`; }).join('') || '<span class="msub">売り切れ</span>';
-  return `<div class="mbox" style="--pc:${p.hero.color}"><div class="mtitle"><span class="pl" style="--pc:${p.hero.color}">P${p.idx + 1} ${p.hero.short}</span>🛒 道具屋　<span class="coin">🪙 ${p.coins}</span></div>
+  return `<div class="mbox" style="--pc:${p.hero.color}"><div class="mtitle"><span class="pl" style="--pc:${p.hero.color}">${plabel(p)} ${p.hero.short}</span>🛒 道具屋　<span class="coin">🪙 ${p.coins}</span></div>
   <div class="msub">買ったカードは捨て札に入ります。${p.heroId === 'chuta' ? '（商才：全品1コイン引き）' : ''}${p.discount ? `（値切り中：-${p.discount}）` : ''}</div>
   <div style="overflow-y:auto;max-height:72vh">
   <div class="sect">共通カード</div><div class="shoprow">${row(G.market, 'm')}</div>
@@ -981,7 +1249,8 @@ function newPlayer(idx, heroId) {
   const h = HEROES[heroId];
   return { idx, heroId, hero: h, hp: h.hp, maxHp: h.hp, deck: [], hand: [], discard: [], mana: 5, coins: 0, shield: 0, discount: 0,
     abyss: 0, rage: 0, rageNow: 0, storedAtk: 0, blockedAccum: 0, investNext: 0, nextAtkPending: 0, used: {}, attacksThisTurn: 0, skillsThisTurn: 0, turnAtk: 0, heroDeck: [], heroRow: [],
-    field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false, burnCount: 0, inferno: false, weathered: [] };
+    field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false, burnCount: 0, inferno: false, weathered: [],
+    anchor: false, wAtk: 3, wSwings: 1, wUsed: 0, wTurnAtk: 0, wCoinBonus: 0, wDisc: 0, wPierce: false, wInst: null };
 }
 function startGame(h0, h1, cpus = [null, null]) {
   UID = 1; FUSED = {}; SCREEN = 'game'; M = null; renderModal();
@@ -992,6 +1261,7 @@ function startGame(h0, h1, cpus = [null, null]) {
     p.deck = shuffle(ids.map(mk));
     p.heroDeck = shuffle(HEROES[h].pool.flatMap(id => [mk(id), mk(id)]));
     p.heroRow = p.heroDeck.splice(-3);
+    if (h === 'samurai') { p.wInst = { uid: UID++, id: 'byakko' }; FUSED[p.wInst.uid] = p.wInst; syncWeapon(p); }
     G.players.push(p);
   });
   G.marketDeck = shuffle(NEUTRAL.flatMap(id => [mk(id), mk(id)]));
@@ -1007,9 +1277,11 @@ function startGame(h0, h1, cpus = [null, null]) {
 }
 async function startTurn() {
   const p = cur(), o = opp(p);
+  if (ONLINE) netCheck();
   p.used = {}; p.attacksThisTurn = 0; p.skillsThisTurn = 0; p.turnAtk = 0; p.discount = 0; p.nextAtkPending = 0;
   p.rageNow = p.rage; p.rage = 0;
   p.dinoDiscount = 0; p.dinoAtk = 0; p.elvesThisTurn = 0; p.elfBless = false;
+  p.anchor = false; p.wSwings = 1; p.wUsed = 0; p.wTurnAtk = 0; p.wCoinBonus = 0; p.wDisc = 0;
   p.field.forEach(dn => dn.exhausted = false);
   if (p.shield) { log(`${pname(p)}の聖なる盾（${p.shield}）が消えた`, 'holy'); p.shield = 0; }
   // ゴーレムの「石化」は相手のターン開始時に解ける
@@ -1060,14 +1332,18 @@ function handClick(pi, uid) {
   const d = D(c);
   if (G.seals.has(uid)) { toast('威圧中！ カード上のボタンで解除できます'); return; }
   if (d.type === 'curse') { toast('呪いカードは使用できない'); return; }
-  if (p.mana < d.cost) { toast('マナが足りない'); return; }
+  if (p.mana < ccost(p, c)) { toast('マナが足りない'); return; }
   if (d.type === 'summon' && p.field.length >= MAX_FIELD) { toast(`恐竜は${MAX_FIELD}体までしか並べられない`); return; }
   if (d.needDino && !p.field.length) { toast('場に恐竜がいない'); return; }
   run(() => playCard(p, c));
 }
-async function playCard(p, c) {
+// grave=true：捨て札から使う（海賊の釣り上げ）。使用後は山札の一番下へ
+async function playCard(p, c, grave = false) {
   const d = D(c), o = opp(p);
-  removeFrom(p.hand, c); p.mana -= d.cost;
+  const cost = grave ? graveCost(p, c) : ccost(p, c);
+  if (grave) { p.discard = flatCards(p.discard); removeFrom(p.discard, c); log(`${pname(p)}は「${d.name}」を捨て札から釣り上げた！`, 'sys'); }
+  else removeFrom(p.hand, c);
+  p.mana -= cost; c.costDown = 0;
   if (d.elf) p.elvesThisTurn++;
   if (d.type === 'summon') {
     G.stage = { pi: p.idx, card: c, skill: true, result: '召喚！' };
@@ -1076,20 +1352,21 @@ async function playCard(p, c) {
     G.stage = { pi: p.idx, card: c, skill: true, result: 'スキル発動' };
     log(`${pname(p)}は「${d.name}」を使用`);
     render(); await sleep(250);
-    if (d.play) await d.play({ p, o, card: c });
-    if (d.weather) weatherCard(p, c); else p.discard.push(c);
+    if (d.play) await d.play({ p, o, card: c, grave });
+    if (grave) p.deck.unshift(c); else if (d.weather) weatherCard(p, c); else p.discard.push(c);
     p.skillsThisTurn++;
     if (p.heroId === 'merla' && p.skillsThisTurn >= 2) await damage(o, 1, '魔力共鳴');
   } else {
-    await resolveAttack({ p, o, card: c, atk: d.atk, dmg: 0 });
+    await resolveAttack({ p, o, card: c, atk: d.atk, dmg: 0, grave });
   }
   if (d.elf && p.heroId === 'elf' && p.elvesThisTurn % 2 === 0) { log('森の囁き：1枚引く'); await draw(p, 1); }
   render();
 }
 // a.dino があれば恐竜の攻撃（カードの使用時効果やヒーロー補正は乗らない）
 async function resolveAttack(a) {
-  const { p, o, card } = a; const d = D(card); const dino = a.dino;
-  if (!dino) {
+  const { p, o, card } = a; const d = D(card); const dino = a.dino, wpn = a.weapon;
+  if (wpn) a.atk += p.turnAtk + p.wTurnAtk;
+  else if (!dino) {
     const pending = p.nextAtkPending; p.nextAtkPending = 0;
     if (d.play) await d.play(a);
     a.atk += p.turnAtk + p.rageNow + pending;
@@ -1101,7 +1378,7 @@ async function resolveAttack(a) {
     if (p.attacksThisTurn === 0 && p.storedAtk) { a.atk += p.storedAtk; p.storedAtk = 0; }
   } else a.atk += p.dinoAtk;
   p.attacksThisTurn++;
-  const name = dino ? dino.name : d.name, unblock = dino ? dino.fly : d.unblockable, onHit = dino ? dino.hit : d.hit;
+  const name = dino ? dino.name : d.name, unblock = dino ? dino.fly : wpn ? a.pierce : (d.unblockable || (a.grave && d.graveUnblock)), onHit = dino ? dino.hit : wpn ? null : d.hit;
   a.target = await chooseTarget(p, o, a);
   log(`${pname(p)}の攻撃「${name}」ATK${a.atk}${unblock ? '（防御不能）' : ''}${a.target ? ` → ${a.target.name}` : ''}`);
   G.stage = { pi: p.idx, card, atk: a.atk, defs: [], def: 0, result: '', target: a.target };
@@ -1117,13 +1394,14 @@ async function resolveAttack(a) {
   G.stage.defs = defs; G.stage.def = total; render();
   for (const c of defs) if (D(c).defend) await D(c).defend({ p: o, o: p, card: c, a });
   o.blockedAccum += total;
-  if (!dino) { if (d.weather) weatherCard(p, card); else p.discard.push(card); }
+  if (!dino && !wpn) { if (a.grave) p.deck.unshift(card); else if (d.weather) weatherCard(p, card); else p.discard.push(card); }
   if (a.target && a.target.thorns) await damage(p, 1, `${a.target.name}の棘`);
   const dmg = Math.max(0, a.atk - total);
   if (dmg > 0) {
     G.stage.result = `ヒット！ ${dmg}ダメージ`; a.dmg = dmg;
     if (a.target) await damageDino(o, a.target, dmg, name); else await damage(o, dmg, name);
     if (p.heroId === 'carmilla') await heal(p, 1);
+    if (wpn) { log('武士の誉れ', 'coin'); gainCoins(p, 1 + p.wCoinBonus); }
     if (onHit) await onHit(a);
     await stanceTrigger(o, 'hit', a);
   } else {
@@ -1189,7 +1467,7 @@ async function aiChoose(o) {
       if (lv === 1) return [rand(av)];
       const size = p.deck.length + p.discard.length + p.hand.length;
       if (size > (lv === 3 ? 20 : 26)) return [];
-      return take([...av].sort((x, y) => playScore(p, y) - playScore(p, x)), 1);
+      return take([...av].sort((x, y) => draftScore(p, y) - draftScore(p, x)), 1);
     }
     case 'trash': {
       // 基本カードまで削るとドラフトで膨らむデッキの攻撃力が落ちるので、呪い（と大きいデッキの小銭袋）だけ
@@ -1248,6 +1526,13 @@ function aiTarget(p, o, a, opts) {
   if (kill.length && o.hp > 6) return kill[0];
   return null;
 }
+// 獲得・購入時の評価（海賊は亡者と沈没カードを重視）
+function draftScore(p, c) {
+  const d = D(c);
+  if (p.heroId === 'pirate') { if (d.undead) return 5 + (d.atk || 0) * 0.5; if (d.treasure) return 2.5; if (c.id === 'bilge' || c.id === 'maelstrom') return 4; }
+  return playScore(p, c);
+}
+const lv0 = p => (G.cpus && G.cpus[p.idx]) || 2;
 function playScore(p, c) {
   const d = D(c);
   if (d.type === 'summon') return p.field.length >= MAX_FIELD ? -1 : 3 + d.dino.atk + d.dino.hp * 0.3;
@@ -1257,6 +1542,7 @@ function playScore(p, c) {
   if (d.heal && p.hp >= p.maxHp - 1) return -1;
   // 自傷で倒れそうなら使わない
   if (d.burn && !p.inferno && p.hp <= d.burn + 2) return -1;
+  if (d.undead && lv0(p) >= 2 && p.hand.length > 1) return 0.5;
   let s = d.type === 'attack' ? d.atk + (d.hit ? 1 : 0) + (d.unblockable ? 1.5 : 0) + (d.weather ? -0.5 : 0) : 2 + (d.price || 1) * 0.7;
   if (d.moon) s += (d.moon === 'full') === fullMoon(p) ? 2 : -4;
   if (d.burn && p.inferno) s += d.burn * 1.5;
@@ -1313,7 +1599,7 @@ async function aiAction(p, o, lv) {
     }
   }
   if (p.heroId === 'mech' && A[1].can(p) && p.hand.some(c => c.fdef && D(c).cost > p.mana && D(c).cost - 1 <= p.mana)) { optimize(p, p.hand.find(c => c.fdef && D(c).cost > p.mana)); return true; }
-  if (p.heroId === 'pharaoh' && A[0].can(p) && junk()) return useAb(0);
+  if (p.heroId === 'pharaoh' && A[0].can(p) && (lv >= 2 || Math.random() < 0.5)) return useAb(0);
   if (p.heroId === 'wolf' && lv >= 2 && A[0].can(p) && p.mana >= 3 && playable().filter(c => D(c).moon === 'full').length >= 1) return useAb(0);
   if (p.heroId === 'pyro' && lv >= 2 && A[0].can(p) && (p.burnCount >= 3 || (lv === 3 && p.mana >= 5)) && p.hand.filter(c => D(c).burn).length >= 2) return useAb(0);
   if (p.heroId === 'elf' && lv >= 2 && A[0].can(p) && p.hand.filter(c => D(c).elf && D(c).type === 'attack' && canPlay(p, c) && D(c).cost <= p.mana - 3).length >= 2) return useAb(0);
@@ -1325,13 +1611,30 @@ async function aiAction(p, o, lv) {
   }
   const ready = p.field.filter(x => !x.exhausted && dinoCost(p, x) <= p.mana).sort((x, y) => y.atk - x.atk);
   if (ready.length && (lv >= 2 || Math.random() < 0.6)) { await dinoAttack(p, ready[0]); return true; }
+  // 海賊：沈没カード → 錨上げ → 釣り上げ
+  if (p.heroId === 'pirate') {
+    if (lv >= 2) {
+      const zero = playable().filter(c => ccost(p, c) === 0 && D(c).type === 'skill' && playScore(p, c) >= 0);
+      if (zero.length) { await playCard(p, zero[0]); return true; }
+      if (A[0].can(p) && graveZombies(p).length >= (anchorCost(p) <= 1 ? 1 : 2)) return useAb(0);
+    }
+    if (A[1].can(p) && (lv >= 2 || Math.random() < 0.6)) return useAb(1);
+  }
+  // 侍：白虎刀の強化 → 白虎刀で攻撃
+  if (p.heroId === 'samurai') {
+    const left = p.wSwings - p.wUsed;
+    const useful = c => { const k = D(c).wbuff, after = p.mana - ccost(p, c); if (!k) return false; if (k === 'perm') return true; if (k === 'swing') return after >= wCost(p); return left > 0 && after >= wCost(p); };
+    const buffs = playable().filter(useful).sort((x, y) => ccost(p, x) - ccost(p, y));
+    if (lv >= 2 && buffs.length) { await playCard(p, buffs[0]); return true; }
+    if (A[0].can(p) && (lv >= 2 || Math.random() < 0.7)) return useAb(0);
+  }
   // カード使用
   const pl = playable();
   if (pl.length) {
     let c;
     if (lv === 1) c = rand(pl);
     else {
-      const zero = pl.filter(c => D(c).cost === 0 && D(c).type === 'skill' && playScore(p, c) >= 0);
+      const zero = pl.filter(c => ccost(p, c) === 0 && D(c).type === 'skill' && playScore(p, c) >= 0);
       c = zero[0] || [...pl].sort((x, y) => playScore(p, y) - playScore(p, x))[0];
       if (playScore(p, c) < 0) c = null;
     }
@@ -1351,7 +1654,7 @@ async function aiBuy(p, lv) {
     let pick;
     if (lv === 1) { if (Math.random() < 0.5) return; pick = rand(opts); }
     else {
-      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0);
+      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0) + (p.heroId === 'pirate' && D(x[2]).undead ? 2 : 0);
       opts.sort((a, b) => score(b) - score(a)); pick = opts[0];
       if (lv === 3 && D(pick[2]).price <= 2) return;
     }
@@ -1370,9 +1673,9 @@ function cardHTML(c, opt = {}) {
     `${d.type === 'attack' ? `<span class="atk">⚔${d.atk}</span>` : d.type === 'summon' ? `<span class="atk">🦖${d.dino.atk}/❤${d.dino.hp}</span>` : '<span class="sk">✦</span>'}<span class="def">🛡${d.def}${d.dc ? `<i>💧${d.dc}</i>` : ''}</span>`;
   const cid = c.fdef ? 'F' + c.uid : c.id;
   return `<div class="card ${d.type} ${d.fused ? 'fusedc' : ''} ${opt.cls || ''}" data-cid="${cid}" style="--hc:${hc}" ${opt.click ? `onclick="${opt.click}"` : ''}>
-    ${d.type !== 'curse' ? `<div class="cost">${d.cost}</div>` : ''}
+    ${d.type !== 'curse' ? `<div class="cost" ${c.costDown ? 'style="background:radial-gradient(circle at 35% 35%,#9dffb0,#1e8a3a)"' : ''}>${Math.max(0, d.cost - (c.costDown || 0))}</div>` : ''}
     <div class="cname">${d.name}</div><div class="art">${d.art}</div>
-    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
+    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.undead ? '・亡者' : ''}${d.treasure ? '・財宝' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
     <div class="ctext">${fmt(d.text)}</div><div class="stats">${stats}</div>
     ${opt.sealed ? `<div class="seal"><span>${G && G.tempSeals && G.tempSeals.has(c.uid) ? '石化' : '威圧'}</span></div>` : ''}${opt.extra || ''}</div>`;
 }
@@ -1384,13 +1687,13 @@ function dinoHTML(p, dn, main) {
     <div class="dhp"><div style="width:${Math.max(0, 100 * dn.hp / dn.maxHp)}%"></div><span>❤${dn.hp}/${dn.maxHp}</span></div>
     <div class="dst"><span class="atk">⚔${dn.atk + p.dinoAtk}</span> <span class="mana">💧${cost}</span></div>${dn.exhausted ? '<div class="dz">待機中</div>' : ''}</div>`;
 }
-function panelHTML(p) {
+function panelHTML(p, pos = '') {
   const h = p.hero, active = G.turn === p.idx, cpu = isCPU(p);
-  const main = G.phase === 'main' && !G.busy && active && !cpu;
+  const main = G.phase === 'main' && !G.busy && active && !cpu && !isRemote(p);
   const hand = p.hand.map(c => {
     const d = D(c); let cls = ''; const sealed = G.seals.has(c.uid);
     if (main) cls = canPlay(p, c) ? 'playable' : 'unaff';
-    if (G.phase === 'intimidate' && !active && !G.busy && !isCPU(cur()) && d.type !== 'curse' && !sealed) cls = 'target';
+    if (G.phase === 'intimidate' && !active && !G.busy && !isCPU(cur()) && !isRemote(cur()) && d.type !== 'curse' && !sealed) cls = 'target';
     const extra = sealed && main ? unsealHTML(p, c) : '';
     return cardHTML(c, { cls, sealed, extra, click: `handClick(${p.idx},${c.uid})` });
   }).join('') || '<div class="empty">手札なし</div>';
@@ -1405,25 +1708,28 @@ function panelHTML(p) {
   if (p.nextAtkPending && active) extra.push(`<span class="rage">⚔次の攻撃+${p.nextAtkPending}</span>`);
   if (p.investNext) extra.push(`<span class="coin">📈投資 +${p.investNext}</span>`);
   if (p.heroId === 'golem' && p.blockedAccum) extra.push(`<span class="mana">🛡防御計 ${p.blockedAccum}</span>`);
-  const abils = h.actives.map((ab, k) => `<button class="abil" title="${ab.text}" ${main && ab.can(p) ? '' : 'disabled'} onclick="useActive(${p.idx},${k})">${ab.name}<small>${ab.cost}</small></button>`).join('');
+  if (p.heroId === 'pirate') { extra.push(`<span class="abyss">💀亡者 <b>${graveZombies(p).length}</b></span>`); extra.push(`<span class="coin">💰財宝 <b>${flatCards(p.discard).filter(c => D(c).treasure).length}</b></span>`); if (p.anchor && active) extra.push(`<span class="mana"><b>⚓錨上げ中</b></span>`); }
+  if (p.heroId === 'samurai' && p.wCoinBonus && active) extra.push(`<span class="coin">🪙ヒット時+${1 + p.wCoinBonus}</span>`);
+  const abils = h.actives.map((ab, k) => `<button class="abil" title="${ab.text}" ${main && ab.can(p) ? '' : 'disabled'} onclick="useActive(${p.idx},${k})">${ab.name}<small>${ab.costNow ? ab.costNow(p) : ab.cost}</small></button>`).join('');
   const tot = p.maxHp + p.shield;
-  return `<div class="panel ${active ? 'active' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
+  return `<div class="panel ${pos} ${active ? 'active' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
     <div class="info">
       <div class="hrow"><div class="portrait" onclick="heroInfo(${p.idx})" title="クリックで詳細">${h.art}</div>
-        <div class="hname"><span class="pl">P${p.idx + 1}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
+        <div class="hname"><span class="pl">${plabel(p)}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
       <div class="hpbar"><div class="hp" style="width:${100 * p.hp / tot}%"></div><div class="sh" style="width:${100 * p.shield / tot}%"></div><span>HP ${p.hp} / ${p.maxHp}${p.shield ? ` ＋✨${p.shield}` : ''}</span></div>
       <div class="res"><span class="mana">💧マナ <b>${p.mana}</b></span><span class="coin">🪙 <b>${p.coins}</b></span>
         <span class="clk" onclick="viewPile(${p.idx},'deck')">📚山札 <b>${p.deck.length}</b></span><span class="clk" onclick="viewPile(${p.idx},'discard')">🗑捨札 <b>${flatCards(p.discard).length}</b></span>${extra.join('')}</div>
       <div class="abils">${abils}</div>
-      <div style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
+      <div class="passive" style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
     </div>
-    ${p.field.length ? `<div class="field">${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
+    ${p.field.length || p.wInst ? `<div class="field">${p.wInst ? weaponHTML(p, main) : ''}${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
     <div class="hand">${hand}</div></div>`;
 }
 function centerHTML() {
   const p = cur(), o = opp(p);
   let inst = '';
   if (isCPU(p)) inst = '🤖 CPUが考え中…';
+  else if (isRemote(p)) inst = `⏳ 相手のターンです${G.phase === 'intimidate' ? '（威圧するカードを選択中）' : '…'}`;
   else if (G.busy) inst = '処理中…';
   else if (G.phase === 'intimidate') inst = `<b style="color:#ff6a6a">【威圧】</b>${pname(o)}の手札から1枚クリック。そのカードは相手が解除するまで使用・防御できない。<br><button onclick="skipSeal()" style="margin-top:4px;padding:3px 10px">威圧しない</button>`;
   else inst = `手札をクリックで使用。<br>💧${p.mana}マナ／🪙${p.coins}コイン`;
@@ -1435,9 +1741,9 @@ function centerHTML() {
       <div class="vs"><div><span class="n a">⚔${s.atk}</span>　vs　<span class="n d">🛡${s.def}</span></div><span class="res">${s.result || (G.busy ? '防御判定中…' : '')}</span></div>
       <div class="defs mini">${s.defs.map(c => cardHTML(c)).join('')}</div>`;
   }
-  const canAct = G.phase === 'main' && !G.busy && !isCPU(p);
+  const canAct = G.phase === 'main' && !G.busy && !isCPU(p) && !isRemote(p);
   return `<div class="center" style="--pc:${p.hero.color}">
-    <div class="tinfo"><div>ラウンド ${G.round}${G.players.some(x => x.heroId === 'wolf') ? `　<span style="color:${G.round % 2 ? '#ffe680' : '#8fa3c8'}">${G.round % 2 ? '🌕満月' : '🌑新月'}</span>` : ''}${miasma() ? `　<span class="rage">⏳瘴気 ${miasma()}</span>` : G.round >= MIASMA_START - 2 ? `　<span style="color:#999">⏳瘴気まで${MIASMA_START - G.round}R</span>` : ''}</div><div class="big">${isCPU(p) ? 'CPU' : 'P' + (p.idx + 1)} ${p.hero.short} のターン</div><div class="inst">${inst}</div></div>
+    <div class="tinfo"><div>ラウンド ${G.round}${G.players.some(x => x.heroId === 'wolf') ? `　<span style="color:${G.round % 2 ? '#ffe680' : '#8fa3c8'}">${G.round % 2 ? '🌕満月' : '🌑新月'}</span>` : ''}${miasma() ? `　<span class="rage">⏳瘴気 ${miasma()}</span>` : G.round >= MIASMA_START - 2 ? `　<span style="color:#999">⏳瘴気まで${MIASMA_START - G.round}R</span>` : ''}</div><div class="big">${plabel(p)} ${p.hero.short} のターン</div><div class="inst">${inst}</div></div>
     <div class="stage">${st}</div>
     <div class="cbtns"><button onclick="openShop()" ${canAct ? '' : 'disabled'}>🛒 道具屋（🪙${p.coins}）</button>
       <button class="danger" onclick="endTurnClick()" ${canAct ? '' : 'disabled'}>ターン終了 ▶</button></div></div>`;
@@ -1446,27 +1752,30 @@ function render() {
   const app = document.getElementById('app');
   if (SCREEN === 'title') { app.innerHTML = titleHTML(); return; }
   if (SCREEN === 'select') { app.innerHTML = selectHTML(); return; }
+  if (SCREEN === 'online') { app.innerHTML = lobbyHTML(); return; }
   if (ANIM === 0 && G.phase !== 'over') return; // 自動テスト時は描画省略
-  const top = G.players[1], bot = G.players[0];
+  const bot = G.players[ONLINE ? ME : 0], top = opp(bot); // オンラインでは自分を常に下側に表示
   let over = '';
   if (G.phase === 'over') {
     const w = G.players[G.winner];
-    over = `<div class="over"><div class="w">${w.hero.art}</div><h1>${isCPU(w) ? 'CPU' : 'P' + (w.idx + 1)} ${w.hero.name} の勝利！</h1><div>ラウンド${G.round}で決着</div>
-      <div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div></div>`;
+    over = `<div class="over"><div class="w">${w.hero.art}</div><h1>${ONLINE ? (w.idx === ME ? 'あなたの勝利！' : '相手の勝利…') : `${plabel(w)} ${w.hero.name} の勝利！`}</h1><div>${ONLINE ? w.hero.name + ' の勝ち　／　' : ''}ラウンド${G.round}で決着</div>
+      ${ONLINE ? `<div style="display:flex;gap:12px"><button class="primary" onclick="netAgain()">もう一度対戦（ヒーロー選択へ）</button><button onclick="toTitle()">やめる（タイトルへ）</button></div>${NET && NET.oppAgain ? '<div style="color:#ffd65a">相手はもう一度遊ぶ準備ができています</div>' : ''}`
+        : `<div style="display:flex;gap:12px"><button class="primary" onclick="rematch()">同じ設定で再戦</button><button onclick="toTitle()">タイトルへ</button></div>`}</div>`;
   }
-  app.innerHTML = `<div class="game"><div class="board">${panelHTML(top)}${centerHTML()}${panelHTML(bot)}</div>
+  app.innerHTML = `<div class="game"><div class="board"><div class="mbar"><button onclick="showLog()">📃 ログ</button><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button>${FS_OK ? `<button onclick="toggleFullscreen()">${document.fullscreenElement ? '⤡ 戻す' : '⛶ 全画面'}</button>` : ''}<span class="hint">カード長押しで拡大</span></div>${panelHTML(top, 'top')}${centerHTML()}${panelHTML(bot, 'bot')}</div>
     <div class="side"><div class="prevslot">カードにマウスを乗せると拡大</div>
-      <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm('タイトルに戻りますか？'))toTitle()">🏠</button></div>
+      <div class="sidebtns"><button onclick="showRules()">📜 ルール</button><button onclick="viewPile(0,'trash')">⚰ 破棄 ${G.trash.length}</button><button onclick="if(confirm(ONLINE ? '対戦をやめてタイトルに戻りますか？（接続が切れます）' : 'タイトルに戻りますか？'))toTitle()">🏠</button></div>
       <div class="log">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div></div></div>${over}`;
 }
 function rematch() { startGame(G.picks[0], G.picks[1], G.cpus); }
-function toTitle() { SCREEN = 'title'; G = null; M = null; renderModal(); render(); }
+function toTitle() { netClose(); SCREEN = 'title'; G = null; M = null; renderModal(); render(); }
 function titleHTML() {
   return `<div class="title"><h1>七英札闘</h1><div class="en">SEVEN ARCANA DUEL</div>
     <div class="heroes">${HERO_ORDER.map(k => HEROES[k].art).join('')}</div>
-    <div style="color:#bbb;line-height:1.7">1台のPCで遊ぶ2人対戦デッキ構築カードゲーム<br>手札は丸見え。それでも読み合え。</div>
+    <div style="color:#bbb;line-height:1.7">1台のPCでも、オンラインでも遊べる2人対戦デッキ構築カードゲーム<br>手札は丸見え。それでも読み合え。</div>
     <div style="display:flex;gap:12px"><button class="primary" style="font-size:18px;padding:12px 30px" onclick="toSelect('pvp')">👥 2人対戦</button>
     <button class="primary" style="font-size:18px;padding:12px 30px" onclick="toSelect('cpu')">🤖 CPU戦</button>
+    <button class="primary" style="font-size:18px;padding:12px 30px" onclick="toLobby()">🌐 オンライン対戦</button>
     <button style="font-size:16px" onclick="G=G||{seals:new Set(),log:[]};showRules()">📜 ルール</button></div></div>`;
 }
 function toSelect(mode) { MODE = mode; SCREEN = 'select'; SEL = []; M = null; renderModal(); render(); }
@@ -1480,6 +1789,7 @@ function selectHTML() {
       <button class="danger" onclick="startCpu(3)">つよい<small>読み合いを考える＋HP+3・コイン+2</small></button></div>
       <div style="text-align:center;margin-top:20px"><button onclick="SEL.pop();render()">← 戻る</button></div></div>`;
   }
+  if (MODE === 'online') return onlineSelectHTML();
   const label = MODE === 'cpu' ? (who === 0 ? '<span style="color:#4a9cff">あなた</span>のヒーロー' : '<span style="color:#ff7a5a">CPU</span>のヒーロー')
     : (who === 0 ? '<span style="color:#4a9cff">P1</span> のヒーロー' : '<span style="color:#ff7a5a">P2</span> のヒーロー');
   const rnd = MODE === 'cpu' && who === 1 ? `<div style="text-align:center;margin-bottom:10px"><button onclick="pickHero(rand(HERO_ORDER))">🎲 ランダム</button></div>` : '';
@@ -1489,22 +1799,259 @@ function selectHTML() {
   <div style="text-align:center;margin-top:14px"><button onclick="toTitle()">← タイトルへ</button></div></div>`;
 }
 function pickHero(k) {
+  if (MODE === 'online') { netPick(k); return; }
   SEL.push(k);
   if (MODE === 'pvp' && SEL.length === 2) startGame(SEL[0], SEL[1]);
   else render();
 }
 function startCpu(lv) { startGame(SEL[0], SEL[1], [null, lv]); }
 
+// ================= online (PeerJS / WebRTC) =================
+// 仕組み：両者が同じシード値で同じゲームを動かし、「誰が何をクリックしたか」だけを送り合う。
+// 入力できるのは常に片方だけ（自分のターン、または自分への選択肢が出ているとき）なので、
+// 操作の順番が両者で一致し、同じ結果になる。
+var NET = null, NET_APPLYING = false, NET_DEPTH = 0;
+const NET_PREFIX = 'seven-arcana-duel-';
+const NET_MAIN = ['handClick', 'dinoClick', 'useActive', 'endTurnClick', 'buy', 'purify', 'sealClick', 'skipSeal'];
+const NET_MODAL = ['pickToggle', 'modalOk', 'modalCancel', 'optPick'];
+const NET_ALL = [...NET_MAIN, ...NET_MODAL, 'unsealBtn'];
+// 自分だけが見ている画面（ルール・山札確認・道具屋）
+function localModal(m) { return !!m && (m.view || m.type === 'html' || m.type === 'shop'); }
+// 自分専用のシグナリング設定（?peerhost=example.com:443 など）。通常は PeerJS の無料サーバーを使う
+function peerOpts() {
+  const h = new URLSearchParams(location.search).get('peerhost'); if (!h) return { debug: 0 };
+  const [host, port] = h.split(':'); return { host, port: +(port || 443), path: '/', secure: (port || '443') === '443', debug: 0 };
+}
+// その操作を、その人（actor）が今行える状態か
+function netReady(n, actor, args) {
+  if (!G || G.phase === 'over') return false;
+  const gameModal = M && !localModal(M) && M.res && M.who && M.who.idx === actor;
+  const idle = !G.busy && (G.phase === 'main' || G.phase === 'intimidate') && G.turn === actor;
+  if (NET_MODAL.includes(n)) return !!gameModal && (n === 'optPick' ? M.type === 'option' : M.type === 'choose');
+  if (n === 'unsealBtn') return args[0] === actor && (gameModal || (idle && G.phase === 'main' && (!M || localModal(M))));
+  return idle;
+}
+function netInstall() {
+  for (const n of NET_ALL) {
+    const orig = window[n];
+    window[n] = function (...args) {
+      if (!ONLINE || NET_DEPTH > 0) return orig.apply(this, args);
+      // ルールや山札確認など、自分だけの画面の操作は送らない
+      if (NET_MODAL.includes(n) && localModal(M)) return orig.apply(this, args);
+      const a = n === 'unsealBtn' ? args.slice(1) : args;
+      if (!netReady(n, ME, a)) { if (n === 'unsealBtn' && args[0]) args[0].stopPropagation(); return; }
+      // 道具屋を開いている間は、購入とお祓いだけ受け付ける
+      if (NET_MAIN.includes(n) && M && !(M.type === 'shop' && (n === 'buy' || n === 'purify'))) return;
+      netSend({ t: 'act', n, a });
+      NET_DEPTH++;
+      try { return orig.apply(this, args); } finally { NET_DEPTH--; }
+    };
+    window[n].orig = orig;
+  }
+  setInterval(netPump, 50);
+}
+// 相手の操作を、こちらの画面が同じ状態になったら順番に適用する
+function netPump() {
+  if (!NET || !ONLINE) return;
+  let guard = 0;
+  while (NET.q.length && guard++ < 50) {
+    const m = NET.q[0], actor = 1 - ME;
+    if (!netReady(m.n, actor, m.a)) break;
+    NET.q.shift();
+    if (!NET_MODAL.includes(m.n) && m.n !== 'unsealBtn' && M && localModal(M)) { M = null; renderModal(); } // 開いていたルール等は閉じる
+    const args = m.n === 'unsealBtn' ? [{ stopPropagation() {} }, ...m.a] : m.a;
+    NET_DEPTH++; NET_APPLYING = true;
+    try { window[m.n].orig(...args); } catch (e) { console.error(e); } finally { NET_DEPTH--; NET_APPLYING = false; }
+  }
+}
+// ズレ検出：ターン開始時の状態を要約して送り合う
+function netHash() {
+  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor])]);
+  let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h;
+}
+function netCheck() {
+  const k = G.round + '-' + G.turn, h = netHash();
+  NET.hashes[k] = h; netSend({ t: 'hash', k, h }); netCompare(k);
+}
+function netCompare(k) {
+  const a = NET.hashes[k], b = NET.oppHashes[k];
+  if (a === undefined || b === undefined) return;
+  if (a !== b && !NET.desync) { NET.desync = true; console.warn('desync at', k); log('⚠ 相手の画面と状態がずれた可能性があります。再戦をおすすめします', 'dmg'); render(); }
+}
+function netSend(msg) { if (NET && NET.conn && NET.conn.open) NET.conn.send(msg); }
+function netClose() {
+  if (!NET) return;
+  const n = NET; NET = null; ONLINE = false; RNG = Math.random; ME = 0;
+  try { n.conn && n.conn.close(); } catch (e) {}
+  try { n.peer && n.peer.destroy(); } catch (e) {}
+  document.getElementById('netlost').style.display = 'none';
+}
+function netLost() {
+  if (!NET || NET.closing) return;
+  NET.lost = true;
+  if (SCREEN === 'online') { NET.status = '接続できませんでした。もう一度お試しください'; NET.err = true; render(); return; }
+  document.getElementById('netlost').style.display = 'flex';
+}
+function newCode() { const ch = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s = ''; for (let i = 0; i < 5; i++) s += ch[Math.floor(Math.random() * ch.length)]; return s; }
+function netFresh(role) {
+  netClose();
+  NET = { role, peer: null, conn: null, q: [], hashes: {}, oppHashes: {}, myPick: null, oppPick: null, status: '', err: false, code: '', oppAgain: false };
+}
+function netHost() {
+  if (typeof Peer === 'undefined') { netFresh('none'); NET.status = '通信ライブラリを読み込めませんでした（ネット接続を確認してください）'; NET.err = true; render(); return; }
+  netFresh('host'); NET.code = newCode(); NET.status = 'サーバーに接続中…'; render();
+  const peer = new Peer(NET_PREFIX + NET.code, peerOpts()); NET.peer = peer;
+  peer.on('open', () => { if (NET && NET.peer === peer) { NET.status = '相手の参加を待っています…'; render(); } });
+  peer.on('connection', conn => {
+    if (!NET || NET.peer !== peer || NET.conn) { conn.close(); return; }
+    netSetup(conn);
+  });
+  peer.on('error', e => {
+    if (!NET || NET.peer !== peer) return;
+    if (e.type === 'unavailable-id') { netHost(); return; } // 合言葉がかぶったら作り直す
+    if (NET.conn) { netLost(); return; }
+    NET.status = 'エラー：' + (e.type || e.message); NET.err = true; render();
+  });
+}
+function netJoin(code) {
+  code = (code || '').trim().toUpperCase();
+  if (!code) return;
+  if (typeof Peer === 'undefined') { netFresh('none'); NET.status = '通信ライブラリを読み込めませんでした（ネット接続を確認してください）'; NET.err = true; render(); return; }
+  netFresh('guest'); NET.code = code; NET.status = `部屋「${code}」に接続中…`; render();
+  const peer = new Peer(peerOpts()); NET.peer = peer;
+  peer.on('open', () => { if (NET && NET.peer === peer) netSetup(peer.connect(NET_PREFIX + code, { reliable: true, serialization: 'json' })); });
+  peer.on('error', e => {
+    if (!NET || NET.peer !== peer) return;
+    if (NET.conn && NET.conn.open) { netLost(); return; }
+    NET.status = e.type === 'peer-unavailable' ? `部屋「${code}」が見つかりません。合言葉を確認してください` : 'エラー：' + (e.type || e.message);
+    NET.err = true; render();
+  });
+}
+function netSetup(conn) {
+  NET.conn = conn;
+  conn.on('open', () => {
+    if (!NET || NET.conn !== conn) return;
+    netSend({ t: 'hello', v: 1 });
+    MODE = 'online'; SCREEN = 'select'; M = null; renderModal(); render();
+  });
+  conn.on('data', netRecv);
+  conn.on('close', netLost);
+  conn.on('error', netLost);
+}
+function netRecv(m) {
+  if (!NET) return;
+  switch (m.t) {
+    case 'act': NET.q.push(m); netPump(); break;
+    case 'hash': NET.oppHashes[m.k] = m.h; netCompare(m.k); break;
+    case 'pick': NET.oppPick = m.h; if (SCREEN === 'select') render(); netMaybeStart(); break;
+    case 'again': NET.oppAgain = true; NET.oppPick = null; render(); break;
+    case 'start': netStart(m); break;
+    case 'bye': NET.closing = true; document.getElementById('netlost').style.display = 'flex'; break;
+  }
+}
+function netPick(k) {
+  if (!NET) return;
+  NET.myPick = k; netSend({ t: 'pick', h: k }); render(); netMaybeStart();
+}
+// ホストが両者のヒーローがそろったのを確認して開始の合図を送る
+function netMaybeStart() {
+  if (!NET || NET.role !== 'host' || !NET.myPick || !NET.oppPick || SCREEN !== 'select') return;
+  const hostIdx = Math.random() < 0.5 ? 0 : 1; // 先攻はランダム
+  const heroes = []; heroes[hostIdx] = NET.myPick; heroes[1 - hostIdx] = NET.oppPick;
+  const m = { t: 'start', seed: Math.floor(Math.random() * 4294967296), heroes, hostIdx };
+  netSend(m); netStart(m);
+}
+function netStart(m) {
+  ONLINE = true; ME = NET.role === 'host' ? m.hostIdx : 1 - m.hostIdx;
+  RNG = seeded(m.seed);
+  Object.assign(NET, { q: [], hashes: {}, oppHashes: {}, desync: false, myPick: null, oppPick: null, oppAgain: false });
+  document.getElementById('netlost').style.display = 'none';
+  startGame(m.heroes[0], m.heroes[1]);
+  log(G.turn === ME ? 'あなたが先攻です' : '相手が先攻です', 'sys'); render();
+}
+function netAgain() {
+  if (!NET) return;
+  netSend({ t: 'again' });
+  NET.myPick = null; MODE = 'online'; SCREEN = 'select'; G = null; M = null; renderModal(); render();
+}
+function toLobby() { netClose(); SCREEN = 'online'; MODE = 'online'; M = null; renderModal(); render(); }
+function copyInvite() {
+  const url = location.origin + location.pathname + '?room=' + NET.code;
+  const done = () => toast('招待リンクをコピーしました');
+  if (navigator.clipboard) navigator.clipboard.writeText(url).then(done, () => prompt('このリンクを相手に送ってください', url));
+  else prompt('このリンクを相手に送ってください', url);
+}
+function lobbyHTML() {
+  const n = NET;
+  let body;
+  if (n && n.role === 'host' && !n.err) {
+    body = `<div class="box"><div>合言葉</div><div class="code">${n.code}</div>
+      <div class="row"><button class="primary" onclick="copyInvite()">🔗 招待リンクをコピー</button></div>
+      <div class="st" style="margin-top:10px">${n.status}</div>
+      <div style="color:#999;font-size:12px">相手に合言葉か招待リンクを送ってください</div></div>
+      <button onclick="toLobby()">キャンセル</button>`;
+  } else if (n && n.role === 'guest' && !n.err) {
+    body = `<div class="box"><div class="st">${n.status}</div></div><button onclick="toLobby()">キャンセル</button>`;
+  } else {
+    body = `<div class="row">
+      <div class="box"><div style="margin-bottom:10px">友だちを招待する</div><button class="primary" style="font-size:18px;padding:10px 26px" onclick="netHost()">🏠 部屋を作る</button></div>
+      <div class="box"><div style="margin-bottom:10px">合言葉で参加する</div>
+        <div class="row"><input id="joincode" maxlength="5" placeholder="ABCDE" onkeydown="if(event.key==='Enter')netJoin(this.value)"><button class="primary" onclick="netJoin(document.getElementById('joincode').value)">参加</button></div></div></div>
+      ${n && n.err ? `<div class="st err">${n.status}</div>` : ''}`;
+  }
+  return `<div class="lobby"><h2>🌐 オンライン対戦</h2><div style="color:#aaa">別々の端末から、友だちとネット越しに対戦できます</div>${body}
+    <button onclick="toTitle()">← タイトルへ</button></div>`;
+}
+function onlineSelectHTML() {
+  const mine = NET && NET.myPick, theirs = NET && NET.oppPick;
+  const st = mine ? (theirs ? 'まもなく開始…' : `あなた：${HEROES[mine].name}　／　相手が選んでいます…`) : (theirs ? '相手は選び終わりました' : '');
+  return `<div class="select"><h2><span style="color:#4a9cff">あなた</span>のヒーローを選んでください</h2>
+  <div style="text-align:center;color:#ffd65a;margin-bottom:10px;min-height:1.4em">${st}　<span style="color:#888;font-size:12px">（相手が何を選んだかは開始まで秘密）</span></div>
+  <div class="hgrid">${HERO_ORDER.map(k => { const h = HEROES[k]; const pk = mine === k ? '<div class="picked">あなた</div>' : '';
+    return `<div class="hcard" style="--pc:${h.color}" onclick="pickHero('${k}')">${pk}<div class="top"><div class="portrait">${h.art}</div><div><div class="hname">${h.name}<small>${h.title}</small></div><div class="hp">❤ HP ${h.hp}　<span style="color:#ccc;font-weight:normal">難易度 ${h.diff}</span></div></div></div>${heroDetailHTML(h)}</div>`; }).join('')}</div>
+  <div style="text-align:center;margin-top:14px"><button onclick="if(confirm('対戦をやめてタイトルに戻りますか？'))toTitle()">← やめる</button></div></div>`;
+}
+window.addEventListener('beforeunload', () => { if (NET && NET.conn && NET.conn.open) try { NET.conn.send({ t: 'bye' }); } catch (e) {} });
+netInstall();
+// 招待リンク（?room=XXXXX）から開いたら自動で参加
+{ const room = new URLSearchParams(location.search).get('room'); if (room) { SCREEN = 'online'; MODE = 'online'; setTimeout(() => netJoin(room), 0); } }
+
 // card preview on hover
+// 全画面表示（Android などで使える。iPhone の Safari は非対応なのでボタン自体を出さない）
+const FS_OK = !!(document.fullscreenEnabled && document.documentElement.requestFullscreen) && matchMedia('(pointer: coarse)').matches;
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => toast('全画面にできませんでした'));
+}
+document.addEventListener('fullscreenchange', () => { if (SCREEN === 'game' && G) render(); });
+// 画面の向きが変わったら描き直す（拡大表示などを閉じる）
+addEventListener('orientationchange', () => { document.getElementById('preview').classList.remove('show'); LP_SHOWN = false; });
+function setPreview(el) {
+  const id = el.dataset.cid;
+  const inst = id[0] === 'F' ? FUSED[+id.slice(1)] : { uid: 0, id };
+  if (inst) document.getElementById('preview').innerHTML = cardHTML(inst, { cls: 'big' });
+  return !!inst;
+}
 document.addEventListener('mouseover', e => {
   const el = e.target.closest && e.target.closest('[data-cid]');
-  const pv = document.getElementById('preview');
-  if (el && SCREEN === 'game') {
-    const id = el.dataset.cid;
-    const inst = id[0] === 'F' ? FUSED[+id.slice(1)] : { uid: 0, id };
-    if (inst) pv.innerHTML = cardHTML(inst, { cls: 'big' });
-  }
+  if (el && SCREEN === 'game' && !LP_SHOWN) setPreview(el);
 });
+// スマホ：カードを長押しで拡大表示（指を離すと閉じる。長押しした時はカードを使わない）
+let LP = null, LP_SHOWN = false, LP_XY = null;
+document.addEventListener('touchstart', e => {
+  const el = e.target.closest && e.target.closest('[data-cid]');
+  clearTimeout(LP); if (!el || e.target.closest('button') || e.touches.length > 1) return;
+  LP_XY = [e.touches[0].clientX, e.touches[0].clientY];
+  LP = setTimeout(() => { if (setPreview(el)) { LP_SHOWN = true; document.getElementById('preview').classList.add('show'); if (navigator.vibrate) navigator.vibrate(12); } }, 380);
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (!LP_XY || LP_SHOWN) return; const t = e.touches[0];
+  if (Math.abs(t.clientX - LP_XY[0]) + Math.abs(t.clientY - LP_XY[1]) > 10) clearTimeout(LP);
+}, { passive: true });
+const lpEnd = () => { clearTimeout(LP); LP_XY = null; if (!LP_SHOWN) return; document.getElementById('preview').classList.remove('show'); setTimeout(() => { LP_SHOWN = false; }, 450); };
+document.addEventListener('touchend', lpEnd); document.addEventListener('touchcancel', lpEnd);
+document.addEventListener('click', e => { if (LP_SHOWN) { e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener('contextmenu', e => { if (e.target.closest && e.target.closest('[data-cid]')) e.preventDefault(); });
 render();
 </script>
 </body>
