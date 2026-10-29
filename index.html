@@ -51,6 +51,7 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .dino.ready:hover{transform:translateY(-3px)}
 .dino.tired{opacity:.6}
 .dino.weapon{border-color:#c9d6e8;background:linear-gradient(#2a3242,#11141c)}
+.dino.band{border-color:#7d6bff;background:linear-gradient(#2a2346,#120f1d)}
 .dart{font-size:32px;line-height:1.2}
 .dname{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px}
 .dhp{width:100%;height:13px;background:#3a1010;border-radius:6px;position:relative;overflow:hidden;margin:3px 0}
@@ -710,6 +711,39 @@ const CARDS = {
     play: async x => { x.p.wPierce = true; await draw(x.p, 1); } },
   byakkoroar: { hero: 'samurai', wbuff: 'swing', name: '白虎の咆哮', type: 'skill', cost: 2, def: 1, dc: 0, price: 6, art: '🐯', text: '【使用時】白虎刀のATK+1（ずっと続く）。このターン、白虎刀をもう1回振れる',
     play: async x => { sharpen(x.p, 1); x.p.wSwings += 1; } },
+  // ---- 花魁 朧（魅了：防御できず、おひねりで無力化） ----
+  glance: { hero: 'oiran', name: '流し目', type: 'attack', charm: 3, atk: 0, cost: 0, def: 1, dc: 0, price: 2, art: '👁️', text: '【魅了3】\n無力化されたら1枚引く', nullDraw: true },
+  fan: { hero: 'oiran', name: '扇の舞', type: 'attack', charm: 4, atk: 0, cost: 1, def: 1, dc: 0, price: 2, art: '🪭', text: '【魅了4】' },
+  kiseru: { hero: 'oiran', name: '煙管の一服', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🚬', text: '【使用時】コイン+2', play: async x => gainCoins(x.p, 2) },
+  sake: { hero: 'oiran', name: 'お酌', type: 'skill', cost: 1, def: 2, dc: 0, price: 2, art: '🍶', text: '【使用時】このターンの【魅了】全てX+1。1枚引く',
+    play: async x => { x.p.charmBonus += 1; await draw(x.p, 1); } },
+  kanzashi: { hero: 'oiran', name: '簪の一刺し', type: 'attack', charm: 3, atk: 0, cost: 1, def: 1, dc: 0, price: 4, art: '📍', text: '【魅了3】\n無力化されなかった時 コイン+2', hit: async x => gainCoins(x.p, 2) },
+  shamisen: { hero: 'oiran', name: '三味線の調べ', type: 'attack', charm: 4, atk: 0, cost: 2, def: 1, dc: 0, price: 4, art: '🪕', text: '【魅了4】\n【使用時】1枚引く', play: async x => draw(x.p, 1) },
+  tayu: { hero: 'oiran', name: '太夫の微笑', type: 'attack', charm: 5, atk: 0, cost: 2, def: 1, dc: 0, price: 5, art: '😊', text: '【魅了5】\n無力化されたら1枚引く', nullDraw: true },
+  parade: { hero: 'oiran', name: '花魁道中', type: 'attack', charm: 7, atk: 0, cost: 4, def: 1, dc: 0, price: 7, art: '🏮', text: '【魅了7】' },
+  ohineri: { hero: 'oiran', name: 'おひねり', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🧧', text: '【使用時】コイン+3', play: async x => gainCoins(x.p, 3) },
+  usonaki: { hero: 'oiran', name: '嘘泣き', type: 'skill', cost: 1, def: 4, dc: 0, price: 3, art: '😢', text: '【防御時】コイン+2', defend: async x => gainCoins(x.p, 2) },
+  koibumi: { hero: 'oiran', name: '恋文', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '💌', text: '【使用時】相手のコインを2奪う。1枚引く',
+    play: async x => { const n = Math.min(2, x.o.coins); x.o.coins -= n; if (n) { gainCoins(x.p, n); log(`${pname(x.o)}からコイン${n}を貢がせた`, 'coin'); } await draw(x.p, 1); } },
+
+  // ---- ギターボーカル レイジ（バンドメンバーは場に残る。オーディエンスでレベルアップ） ----
+  drummer: { hero: 'rocker', name: 'ドラマー', type: 'attack', cost: 1, atk: 1, def: 0, dc: 0, price: 0, art: '🥁', text: 'バンドメンバー（手札に入らない）' },
+  bassist: { hero: 'rocker', name: 'ベーシスト', type: 'attack', cost: 2, atk: 2, def: 0, dc: 0, price: 0, art: '🎻', text: 'バンドメンバー（手札に入らない）' },
+  riff: { hero: 'rocker', aud: true, name: 'ギターリフ', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🎸', text: '【使用時】オーディエンス+1', play: async x => gainAud(x.p, 1) },
+  shout: { hero: 'rocker', aud: true, name: 'シャウト', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🎤', text: '【使用時】オーディエンス+1。このターン、メンバーのATK+1',
+    play: async x => { gainAud(x.p, 1); x.p.bandAtk += 1; } },
+  flyer: { hero: 'rocker', aud: true, name: 'ビラ配り', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '📄', text: '【使用時】オーディエンス+1。コイン+1', play: async x => { gainAud(x.p, 1); gainCoins(x.p, 1); } },
+  ballad: { hero: 'rocker', aud: true, name: 'バラード', type: 'skill', cost: 1, def: 2, dc: 0, price: 2, art: '🌹', text: '【使用時】オーディエンス+2', play: async x => gainAud(x.p, 2) },
+  dive: { hero: 'rocker', aud: true, name: 'ステージダイブ', type: 'attack', cost: 3, atk: 4, def: 1, dc: 0, price: 4, art: '🤸', text: '【ヒット時】オーディエンス+2', hit: async x => gainAud(x.p, 2) },
+  mosh: { hero: 'rocker', aud: true, name: 'モッシュピット', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🤘', text: '【使用時】オーディエンス+1', play: async x => gainAud(x.p, 1) },
+  encore: { hero: 'rocker', name: 'アンコール', type: 'skill', cost: 2, def: 1, dc: 0, price: 5, art: '🔁', text: '【使用時】このターン、メンバー全員もう1回攻撃できる',
+    play: async x => { x.p.band.forEach(m => m.max++); log('アンコール！ メンバーがもう1回攻撃できる'); } },
+  solo: { hero: 'rocker', name: 'ギターソロ', type: 'attack', cost: 3, atk: 3, def: 1, dc: 0, price: 6, art: '⚡', text: '【使用時】レベル1につきATK+2（Lv1は+0）', play: async x => { x.atk += (rlv(x.p) - 1) * 2; } },
+  amp: { hero: 'rocker', name: '爆音アンプ', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '🔊', text: '【使用時】このターン、メンバーのATK+2', play: async x => { x.p.bandAtk += 2; } },
+  merch: { hero: 'rocker', name: '物販', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '👕', text: '【使用時】コイン+2。レベル2以上ならさらにコイン+2', play: async x => gainCoins(x.p, rlv(x.p) >= 2 ? 4 : 2) },
+  fes: { hero: 'rocker', aud: true, name: '野外フェス', type: 'skill', cost: 3, def: 1, dc: 0, price: 6, art: '🎪', text: '【使用時】オーディエンス+4', play: async x => gainAud(x.p, 4) },
+  smash: { hero: 'rocker', aud: true, selfTrash: true, name: 'ギター破壊', type: 'attack', cost: 2, atk: 5, def: 1, dc: 0, price: 5, art: '💥', text: '【使用時】オーディエンス+2\n使用後このカードは破棄される', play: async x => gainAud(x.p, 2) },
+  roadie: { hero: 'rocker', name: 'ローディー', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🎛️', text: '【防御時】オーディエンス+1', defend: async x => gainAud(x.p, 1) },
   sayauke: { hero: 'samurai', name: '鞘受け', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🥢', text: '【防御時】白虎刀のATK+1（ずっと続く）', defend: async x => sharpen(x.p, 1) },
 };
 const NEUTRAL = ['sharp', 'heavy', 'thief', 'ironshield', 'thorn', 'incinerate', 'crystal', 'breath', 'counter', 'mikiri', 'goldbag', 'hammer', 'roar', 'potion', 'axe', 'reveal'];
@@ -868,8 +902,84 @@ Object.assign(HEROES, {
       can: p => p.wUsed < p.wSwings && p.mana >= wCost(p),
       use: async p => weaponAttack(p) }] },
 });
+Object.assign(HEROES, {
+  oiran: { name: '花魁 朧', short: '朧', title: '吉原一の傾城', art: '👘', color: '#e86aa6', hp: 20, diff: '★★☆', sig: 'glance',
+    pool: ['kanzashi', 'shamisen', 'tayu', 'parade', 'ohineri', 'usonaki', 'koibumi', 'fan'], draft: ['glance', 'fan', 'kiseru', 'sake'],
+    passive: '【魅了】固有の攻撃カードは全て【魅了X】：相手はライフをX失う。相手は手札で防御できない代わりに、手札1枚を捨てる／💧マナ2／🪙コイン2のどれか（おひねり）で無力化できる。コインで払われたおひねりは花魁のものになる。',
+    style: '防御札では受けられない魅了で、相手に手札・マナ・コインのどれかを貢がせるか、ライフで払わせる。',
+    actives: [{ name: '傾城', cost: 'コイン3', text: 'このターン、相手が【魅了】を無力化する代償が全て2倍になる（手札2枚／💧4／🪙4。1ターン1回）',
+      can: p => !p.keisei && p.coins >= 3,
+      use: async p => { p.coins -= 3; p.keisei = true; log('傾城の美貌…！ このターン、おひねりは2倍', 'coin'); fx(p.idx, '傾城!', 'info'); render(); } }] },
+  rocker: { name: 'ギターボーカル レイジ', short: 'レイジ', title: '伝説を目指すロックンローラー', art: '🎸', color: '#7d6bff', hp: 14, diff: '★★★', sig: 'riff',
+    pool: ['dive', 'mosh', 'encore', 'solo', 'amp', 'merch', 'fes', 'smash', 'roadie'], draft: ['riff', 'shout', 'flyer', 'ballad'],
+    passive: '【バンド】最初からドラマー🥁とベーシスト🎻が場にいる（倒されない・手札に入らない）。マナを払って攻撃（各1ターン1回）。【オーディエンス】集めるとレベルアップ（4人でLv2／8人でLv3／12人でLv4）。Lv2：メンバーATK+2　Lv3：ATK+4・攻撃コスト-1　Lv4：ATK+6・ターン開始時に1枚引く',
+    style: '最初は打たれ弱く非力。固有カードでオーディエンスを集め、レベルアップしたバンドで押し切る。',
+    actives: [
+      { name: 'ドラム', cost: 'マナ1', costNow: p => `マナ${memberCost(p, 0)}`, text: 'ドラマーで攻撃（ATK1。レベルで強くなる）', can: p => memberCan(p, 0), use: async p => memberAttack(p, 0) },
+      { name: 'ベース', cost: 'マナ2', costNow: p => `マナ${memberCost(p, 1)}`, text: 'ベーシストで攻撃（ATK2。レベルで強くなる）', can: p => memberCan(p, 1), use: async p => memberAttack(p, 1) }] },
+});
+// ---- 花魁：魅了 ----
+async function resolveCharm(p, o, c) {
+  const d = D(c), x = d.charm + p.charmBonus, mul = p.keisei ? 2 : 1;
+  const nd = mul, nm = 2 * mul, nc = 2 * mul;
+  p.attacksThisTurn++;
+  log(`${pname(p)}の魅了「${d.name}」：ライフ${x}を失わせる`);
+  G.stage = { pi: p.idx, card: c, skill: true, result: `🌸魅了 ライフ-${x}` }; render(); await sleep(300);
+  if (d.play) await d.play({ p, o, card: c });
+  p.discard.push(c);
+  const opts = [];
+  if (o.hand.length >= nd) opts.push({ label: `🃏 手札を${nd}枚捨てる`, value: 'hand' });
+  if (o.mana >= nm) opts.push({ label: `💧 マナ${nm}を払う`, value: 'mana' });
+  if (o.coins >= nc) opts.push({ label: `🪙 コイン${nc}を払う`, value: 'coin' });
+  opts.push({ label: `💔 受ける（ライフ-${x}）`, value: 'take' });
+  const v = opts.length === 1 ? 'take' : await chooseOption({ who: o, title: `🌸「${d.name}」おひねりで無力化しますか？`,
+    sub: `受けるとライフを${x}失います（防御カード・聖なる盾では防げない）。コインで払うと相手のものになります。あなたのライフ❤${o.hp}${mul > 1 ? '<br><b style="color:#ff8ac0">傾城：代償が2倍</b>' : ''}${o.mana ? '<br>※マナを払うと次の自分のターンには残りません' : ''}`,
+    options: opts, aiFn: () => aiCharm(o, x, nd, nm, nc, opts) });
+  if (v === 'hand') {
+    const s = await choose({ who: o, title: `おひねり：捨てる手札を${nd}枚選ぶ`, cards: o.hand, min: nd, max: nd, confirm: '捨てる', ai: 'worst' });
+    s.forEach(c2 => discardFromHand(o, c2)); log(`${pname(o)}は手札${nd}枚を差し出して無力化`, 'sys'); G.stage.result = 'おひねり（手札）で無力化';
+  } else if (v === 'mana') { o.mana -= nm; log(`${pname(o)}はマナ${nm}を払って無力化`, 'sys'); G.stage.result = 'おひねり（マナ）で無力化'; }
+  else if (v === 'coin') { o.coins -= nc; log(`${pname(o)}はコイン${nc}を払って無力化`, 'coin'); gainCoins(p, nc); G.stage.result = 'おひねり（コイン）で無力化'; }
+  if (v !== 'take' && d.nullDraw) await draw(p, 1);
+  if (v === 'take') { G.stage.result = `魅了！ ライフ-${x}`; await loseHp(o, x, d.name); if (d.hit) await d.hit({ p, o, card: c, dmg: x }); }
+  render(); await sleep(250);
+}
+function aiCharm(o, x, nd, nm, nc, opts) {
+  const has = v => opts.some(q => q.value === v);
+  const life = x >= o.hp ? 999 : x * (o.hp <= 8 ? 2.6 : 1.3);
+  const cands = [['take', life]];
+  if (has('hand')) cands.push(['hand', [...o.hand].sort((a, b) => cval(a) - cval(b)).slice(0, nd).reduce((t, c) => t + Math.max(0.3, cval(c) * 0.5), 0)]);
+  if (has('mana')) cands.push(['mana', nm * 0.9]);
+  if (has('coin')) cands.push(['coin', nc * 0.9]);
+  return cands.sort((a, b) => a[1] - b[1])[0][0];
+}
+// ---- ロッカー：バンド ----
+const rlv = p => p.aud >= 12 ? 4 : p.aud >= 8 ? 3 : p.aud >= 4 ? 2 : 1;
+const memberAtk = (p, i) => CARDS[p.band[i].id].atk + (rlv(p) - 1) * 2;
+const memberCost = (p, i) => Math.max(0, CARDS[p.band[i].id].cost - (rlv(p) >= 3 ? 1 : 0));
+const memberCan = (p, i) => !!p.band[i] && p.band[i].used < p.band[i].max && p.mana >= memberCost(p, i);
+function gainAud(p, n) {
+  const before = rlv(p); p.aud += n; log(`${pname(p)} オーディエンス+${n}（${p.aud}人）`, 'heal'); fx(p.idx, `👥+${n}`, 'heal');
+  if (rlv(p) > before) { log(`🎸 レベルアップ！ Lv${rlv(p)}`, 'turn'); fx(p.idx, `Lv${rlv(p)}!`, 'holy'); }
+  render();
+}
+function syncMember(p, i) {
+  const m = p.band[i], base = CARDS[m.id];
+  m.fdef = { ...base, atk: memberAtk(p, i), cost: memberCost(p, i), text: `バンドメンバー（手札に入らない）\nLv${rlv(p)}：ATK${memberAtk(p, i)}・攻撃💧${memberCost(p, i)}` };
+  return m;
+}
+async function memberAttack(p, i) {
+  const m = syncMember(p, i); p.mana -= memberCost(p, i); m.used++;
+  await resolveAttack({ p, o: opp(p), card: m, atk: memberAtk(p, i), dmg: 0, unit: true });
+}
+function bandHTML(p, i, main) {
+  const m = syncMember(p, i), left = Math.max(0, m.max - m.used), can = main && memberCan(p, i), act = G.turn === p.idx;
+  return `<div class="dino band ${can ? 'ready' : ''} ${act && !left ? 'tired' : ''}" data-cid="F${m.uid}" onclick="useActive(${p.idx},${i})" title="${m.fdef.name}${can ? '：タップで攻撃' : ''}">
+    <div class="dtag">Lv${rlv(p)}</div><div class="dart">${m.fdef.art}</div><div class="dname">${m.fdef.name}</div>
+    <div class="dst"><span class="atk">⚔${memberAtk(p, i) + (act ? p.bandAtk + p.turnAtk : 0)}</span> <span class="mana">💧${memberCost(p, i)}</span></div>${act && m.max > 1 ? `<div class="dz">あと${left}回</div>` : ''}</div>`;
+}
 const recallCost = c => Math.max(2, CARDS[c.id].cost + 1);
-const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai'];
+const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai', 'oiran', 'rocker'];
 // ---- 海賊：沈没・亡者 ----
 const ccost = (p, c) => Math.max(0, D(c).cost - (c.costDown || 0));
 const graveCost = (p, c) => Math.max(0, ccost(p, c) - (p.anchor ? 2 : 0));
@@ -1204,6 +1314,8 @@ function showRules() {
   <p><b>エルフ</b>（リーフィア）：【エルフ】が付いた低コストカード。使った枚数に応じてドローや攻撃力が増える。</p>
   <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。「冥府の帰還」（コイン2）で手札に呼び戻すと、そのカードのマナコストが1下がる。</p>
   <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>【財宝】</b>が捨て札にあるほど「錨上げ」が安くなる。</p>
+  <p><b>【魅了X】</b>（朧）：相手はライフをX失う。手札のカードでは防御できない代わりに、<b>手札1枚を捨てる／💧マナ2／🪙コイン2</b>のどれか（おひねり）で無力化できる。コインのおひねりは花魁がもらう。「傾城」中は代償が2倍。</p>
+  <p><b>バンドとオーディエンス</b>（レイジ）：ドラマーとベーシストは最初から場にいて倒されない。タップしてマナを払うと攻撃（各1ターン1回）。【観客】カードでオーディエンスを集めるとレベルアップ（4人でLv2／8人でLv3／12人でLv4）し、メンバーが強くなる。</p>
   <p><b>白虎刀</b>（シグレ）：手札に入らない専用武器。場の白虎刀をタップ（または能力ボタン）で、💧2を払って攻撃（基本1ターン1回）。砥石・玉鋼でATKがずっと上がり、二の太刀などで振れる回数が増える。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
   <p><b>合成</b>（ギア）：手札2枚を1枚にまとめる。コスト・ATK・DEFは合計（コストは−1）、効果は全部発動。使用後は元のカードに分解されて捨て札へ。</p>
@@ -1250,7 +1362,8 @@ function newPlayer(idx, heroId) {
   return { idx, heroId, hero: h, hp: h.hp, maxHp: h.hp, deck: [], hand: [], discard: [], mana: 5, coins: 0, shield: 0, discount: 0,
     abyss: 0, rage: 0, rageNow: 0, storedAtk: 0, blockedAccum: 0, investNext: 0, nextAtkPending: 0, used: {}, attacksThisTurn: 0, skillsThisTurn: 0, turnAtk: 0, heroDeck: [], heroRow: [],
     field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false, burnCount: 0, inferno: false, weathered: [],
-    anchor: false, wAtk: 3, wSwings: 1, wUsed: 0, wTurnAtk: 0, wCoinBonus: 0, wDisc: 0, wPierce: false, wInst: null };
+    anchor: false, wAtk: 3, wSwings: 1, wUsed: 0, wTurnAtk: 0, wCoinBonus: 0, wDisc: 0, wPierce: false, wInst: null,
+    keisei: false, charmBonus: 0, aud: 0, band: [], bandAtk: 0 };
 }
 function startGame(h0, h1, cpus = [null, null]) {
   UID = 1; FUSED = {}; SCREEN = 'game'; M = null; renderModal();
@@ -1262,6 +1375,7 @@ function startGame(h0, h1, cpus = [null, null]) {
     p.heroDeck = shuffle(HEROES[h].pool.flatMap(id => [mk(id), mk(id)]));
     p.heroRow = p.heroDeck.splice(-3);
     if (h === 'samurai') { p.wInst = { uid: UID++, id: 'byakko' }; FUSED[p.wInst.uid] = p.wInst; syncWeapon(p); }
+    if (h === 'rocker') { p.band = ['drummer', 'bassist'].map(id => ({ uid: UID++, id, used: 0, max: 1 })); p.band.forEach((m, k) => { FUSED[m.uid] = m; syncMember(p, k); }); }
     G.players.push(p);
   });
   G.marketDeck = shuffle(NEUTRAL.flatMap(id => [mk(id), mk(id)]));
@@ -1282,6 +1396,7 @@ async function startTurn() {
   p.rageNow = p.rage; p.rage = 0;
   p.dinoDiscount = 0; p.dinoAtk = 0; p.elvesThisTurn = 0; p.elfBless = false;
   p.anchor = false; p.wSwings = 1; p.wUsed = 0; p.wTurnAtk = 0; p.wCoinBonus = 0; p.wDisc = 0;
+  p.keisei = false; p.charmBonus = 0; p.bandAtk = 0; p.band.forEach(m => { m.used = 0; m.max = 1; });
   p.field.forEach(dn => dn.exhausted = false);
   if (p.shield) { log(`${pname(p)}の聖なる盾（${p.shield}）が消えた`, 'holy'); p.shield = 0; }
   // ゴーレムの「石化」は相手のターン開始時に解ける
@@ -1294,6 +1409,7 @@ async function startTurn() {
   if (p.rageNow) log(`怒り${p.rageNow}：このターンの攻撃ATK+${p.rageNow}`, 'dmg');
   const mz = miasma();
   if (mz) { log(`瘴気が満ちる…`, 'dmg'); await damage(p, mz, '瘴気', true); }
+  if (p.heroId === 'rocker' && rlv(p) >= 4) { log('伝説のライブ：1枚引く', 'sys'); await draw(p, 1); }
   G.phase = 'draft'; render();
   await draftStep(p);
   G.phase = o.hand.some(c => D(c).type !== 'curse' && !G.seals.has(c.uid)) ? 'intimidate' : 'main';
@@ -1357,15 +1473,16 @@ async function playCard(p, c, grave = false) {
     p.skillsThisTurn++;
     if (p.heroId === 'merla' && p.skillsThisTurn >= 2) await damage(o, 1, '魔力共鳴');
   } else {
-    await resolveAttack({ p, o, card: c, atk: d.atk, dmg: 0, grave });
+    if (d.charm) await resolveCharm(p, o, c);
+    else await resolveAttack({ p, o, card: c, atk: d.atk, dmg: 0, grave });
   }
   if (d.elf && p.heroId === 'elf' && p.elvesThisTurn % 2 === 0) { log('森の囁き：1枚引く'); await draw(p, 1); }
   render();
 }
 // a.dino があれば恐竜の攻撃（カードの使用時効果やヒーロー補正は乗らない）
 async function resolveAttack(a) {
-  const { p, o, card } = a; const d = D(card); const dino = a.dino, wpn = a.weapon;
-  if (wpn) a.atk += p.turnAtk + p.wTurnAtk;
+  const { p, o, card } = a; const d = D(card); const dino = a.dino, wpn = a.weapon || a.unit;
+  if (wpn) a.atk += p.turnAtk + (a.weapon ? p.wTurnAtk : p.bandAtk);
   else if (!dino) {
     const pending = p.nextAtkPending; p.nextAtkPending = 0;
     if (d.play) await d.play(a);
@@ -1378,7 +1495,7 @@ async function resolveAttack(a) {
     if (p.attacksThisTurn === 0 && p.storedAtk) { a.atk += p.storedAtk; p.storedAtk = 0; }
   } else a.atk += p.dinoAtk;
   p.attacksThisTurn++;
-  const name = dino ? dino.name : d.name, unblock = dino ? dino.fly : wpn ? a.pierce : (d.unblockable || (a.grave && d.graveUnblock)), onHit = dino ? dino.hit : wpn ? null : d.hit;
+  const name = dino ? dino.name : d.name, unblock = dino ? dino.fly : wpn ? !!a.pierce : (d.unblockable || (a.grave && d.graveUnblock)), onHit = dino ? dino.hit : wpn ? null : d.hit;
   a.target = await chooseTarget(p, o, a);
   log(`${pname(p)}の攻撃「${name}」ATK${a.atk}${unblock ? '（防御不能）' : ''}${a.target ? ` → ${a.target.name}` : ''}`);
   G.stage = { pi: p.idx, card, atk: a.atk, defs: [], def: 0, result: '', target: a.target };
@@ -1394,14 +1511,14 @@ async function resolveAttack(a) {
   G.stage.defs = defs; G.stage.def = total; render();
   for (const c of defs) if (D(c).defend) await D(c).defend({ p: o, o: p, card: c, a });
   o.blockedAccum += total;
-  if (!dino && !wpn) { if (a.grave) p.deck.unshift(card); else if (d.weather) weatherCard(p, card); else p.discard.push(card); }
+  if (!dino && !wpn) { if (a.grave) p.deck.unshift(card); else if (d.weather) weatherCard(p, card); else if (d.selfTrash) trash(p, card); else p.discard.push(card); }
   if (a.target && a.target.thorns) await damage(p, 1, `${a.target.name}の棘`);
   const dmg = Math.max(0, a.atk - total);
   if (dmg > 0) {
     G.stage.result = `ヒット！ ${dmg}ダメージ`; a.dmg = dmg;
     if (a.target) await damageDino(o, a.target, dmg, name); else await damage(o, dmg, name);
     if (p.heroId === 'carmilla') await heal(p, 1);
-    if (wpn) { log('武士の誉れ', 'coin'); gainCoins(p, 1 + p.wCoinBonus); }
+    if (a.weapon) { log('武士の誉れ', 'coin'); gainCoins(p, 1 + p.wCoinBonus); }
     if (onHit) await onHit(a);
     await stanceTrigger(o, 'hit', a);
   } else {
@@ -1486,6 +1603,7 @@ async function aiChoose(o) {
 }
 async function aiOption(o) {
   await sleep(250);
+  if (o.aiFn) return lvOf(o.who) === 1 ? rand(o.options).value : o.aiFn();
   if (o.ai === 'max' || o.ai === 'first') return lvOf(o.who) === 1 ? rand(o.options).value : o.options[0].value;
   return o.options[0].value;
 }
@@ -1529,6 +1647,7 @@ function aiTarget(p, o, a, opts) {
 // 獲得・購入時の評価（海賊は亡者と沈没カードを重視）
 function draftScore(p, c) {
   const d = D(c);
+  if (p.heroId === 'rocker' && d.aud) return 4 + (d.atk || 0) * 0.3;
   if (p.heroId === 'pirate') { if (d.undead) return 5 + (d.atk || 0) * 0.5; if (d.treasure) return 2.5; if (c.id === 'bilge' || c.id === 'maelstrom') return 4; }
   return playScore(p, c);
 }
@@ -1543,6 +1662,7 @@ function playScore(p, c) {
   // 自傷で倒れそうなら使わない
   if (d.burn && !p.inferno && p.hp <= d.burn + 2) return -1;
   if (d.undead && lv0(p) >= 2 && p.hand.length > 1) return 0.5;
+  if (d.charm) return (d.charm + p.charmBonus) * 1.5 + 0.5 + (d.hit ? 1 : 0);
   let s = d.type === 'attack' ? d.atk + (d.hit ? 1 : 0) + (d.unblockable ? 1.5 : 0) + (d.weather ? -0.5 : 0) : 2 + (d.price || 1) * 0.7;
   if (d.moon) s += (d.moon === 'full') === fullMoon(p) ? 2 : -4;
   if (d.burn && p.inferno) s += d.burn * 1.5;
@@ -1620,6 +1740,8 @@ async function aiAction(p, o, lv) {
     }
     if (A[1].can(p) && (lv >= 2 || Math.random() < 0.6)) return useAb(1);
   }
+  // 花魁：魅了を撃つ前に傾城
+  if (p.heroId === 'oiran' && A[0].can(p) && (lv >= 2 || Math.random() < 0.5) && playable().filter(c => D(c).charm && ccost(p, c) <= p.mana).length >= (o.hand.length >= 2 ? 1 : 2)) return useAb(0);
   // 侍：白虎刀の強化 → 白虎刀で攻撃
   if (p.heroId === 'samurai') {
     const left = p.wSwings - p.wUsed;
@@ -1641,6 +1763,7 @@ async function aiAction(p, o, lv) {
     if (c) { await playCard(p, c); return true; }
   }
   // 余ったマナで使う能力
+  if (p.heroId === 'rocker') for (const k of [1, 0]) if (A[k].can(p)) return useAb(k);
   if (p.heroId === 'kuru' && A[0].can(p)) return useAb(0);
   if (p.heroId === 'angel' && A[0].can(p)) return useAb(0);
   if (p.heroId === 'golem' && A[0].can(p) && o.hand.some(c => !G.seals.has(c.uid) && D(c).type !== 'curse')) return useAb(0);
@@ -1654,7 +1777,7 @@ async function aiBuy(p, lv) {
     let pick;
     if (lv === 1) { if (Math.random() < 0.5) return; pick = rand(opts); }
     else {
-      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0) + (p.heroId === 'pirate' && D(x[2]).undead ? 2 : 0);
+      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0) + (p.heroId === 'pirate' && D(x[2]).undead ? 2 : 0) + (p.heroId === 'rocker' && D(x[2]).aud ? 1.5 : 0);
       opts.sort((a, b) => score(b) - score(a)); pick = opts[0];
       if (lv === 3 && D(pick[2]).price <= 2) return;
     }
@@ -1670,12 +1793,12 @@ function cardHTML(c, opt = {}) {
   const hc = d.hero ? HEROES[d.hero].color : d.type === 'curse' ? '#8a2fb0' : '#77708a';
   const tl = d.fused ? '合成' : d.type === 'attack' ? '攻撃' : d.type === 'skill' ? 'スキル' : d.type === 'summon' ? '召喚' : '呪い';
   const stats = d.type === 'curse' ? '<span class="cst">使用不可</span>' :
-    `${d.type === 'attack' ? `<span class="atk">⚔${d.atk}</span>` : d.type === 'summon' ? `<span class="atk">🦖${d.dino.atk}/❤${d.dino.hp}</span>` : '<span class="sk">✦</span>'}<span class="def">🛡${d.def}${d.dc ? `<i>💧${d.dc}</i>` : ''}</span>`;
+    `${d.charm ? `<span class="atk" style="color:#ff8ac0">💔${d.charm}</span>` : d.type === 'attack' ? `<span class="atk">⚔${d.atk}</span>` : d.type === 'summon' ? `<span class="atk">🦖${d.dino.atk}/❤${d.dino.hp}</span>` : '<span class="sk">✦</span>'}<span class="def">🛡${d.def}${d.dc ? `<i>💧${d.dc}</i>` : ''}</span>`;
   const cid = c.fdef ? 'F' + c.uid : c.id;
   return `<div class="card ${d.type} ${d.fused ? 'fusedc' : ''} ${opt.cls || ''}" data-cid="${cid}" style="--hc:${hc}" ${opt.click ? `onclick="${opt.click}"` : ''}>
     ${d.type !== 'curse' ? `<div class="cost" ${c.costDown ? 'style="background:radial-gradient(circle at 35% 35%,#9dffb0,#1e8a3a)"' : ''}>${Math.max(0, d.cost - (c.costDown || 0))}</div>` : ''}
     <div class="cname">${d.name}</div><div class="art">${d.art}</div>
-    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.undead ? '・亡者' : ''}${d.treasure ? '・財宝' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
+    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.undead ? '・亡者' : ''}${d.treasure ? '・財宝' : ''}${d.charm ? '・魅了' : ''}${d.aud ? '・観客' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
     <div class="ctext">${fmt(d.text)}</div><div class="stats">${stats}</div>
     ${opt.sealed ? `<div class="seal"><span>${G && G.tempSeals && G.tempSeals.has(c.uid) ? '石化' : '威圧'}</span></div>` : ''}${opt.extra || ''}</div>`;
 }
@@ -1709,6 +1832,8 @@ function panelHTML(p, pos = '') {
   if (p.investNext) extra.push(`<span class="coin">📈投資 +${p.investNext}</span>`);
   if (p.heroId === 'golem' && p.blockedAccum) extra.push(`<span class="mana">🛡防御計 ${p.blockedAccum}</span>`);
   if (p.heroId === 'pirate') { extra.push(`<span class="abyss">💀亡者 <b>${graveZombies(p).length}</b></span>`); extra.push(`<span class="coin">💰財宝 <b>${flatCards(p.discard).filter(c => D(c).treasure).length}</b></span>`); if (p.anchor && active) extra.push(`<span class="mana"><b>⚓錨上げ中</b></span>`); }
+  if (p.heroId === 'oiran') { if (p.keisei && active) extra.push(`<span class="rage" style="color:#ff8ac0"><b>🌸傾城中</b></span>`); if (p.charmBonus && active) extra.push(`<span class="rage" style="color:#ff8ac0">💔魅了+${p.charmBonus}</span>`); }
+  if (p.heroId === 'rocker') { const lv = rlv(p), nx = [4, 8, 12][lv - 1]; extra.push(`<span class="heal" style="color:#b9b0ff">👥<b>${p.aud}</b>人 <b>Lv${lv}</b>${nx ? `（次${nx}）` : '（MAX）'}</span>`); if (p.bandAtk && active) extra.push(`<span class="rage">🎶メンバー+${p.bandAtk}</span>`); }
   if (p.heroId === 'samurai' && p.wCoinBonus && active) extra.push(`<span class="coin">🪙ヒット時+${1 + p.wCoinBonus}</span>`);
   const abils = h.actives.map((ab, k) => `<button class="abil" title="${ab.text}" ${main && ab.can(p) ? '' : 'disabled'} onclick="useActive(${p.idx},${k})">${ab.name}<small>${ab.costNow ? ab.costNow(p) : ab.cost}</small></button>`).join('');
   const tot = p.maxHp + p.shield;
@@ -1722,7 +1847,7 @@ function panelHTML(p, pos = '') {
       <div class="abils">${abils}</div>
       <div class="passive" style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
     </div>
-    ${p.field.length || p.wInst ? `<div class="field">${p.wInst ? weaponHTML(p, main) : ''}${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
+    ${p.field.length || p.wInst || p.band.length ? `<div class="field">${p.wInst ? weaponHTML(p, main) : ''}${p.band.map((m, i) => bandHTML(p, i, main)).join('')}${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
     <div class="hand">${hand}</div></div>`;
 }
 function centerHTML() {
@@ -1866,7 +1991,7 @@ function netPump() {
 }
 // ズレ検出：ターン開始時の状態を要約して送り合う
 function netHash() {
-  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor])]);
+  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor, p.aud, p.keisei])]);
   let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h;
 }
 function netCheck() {
