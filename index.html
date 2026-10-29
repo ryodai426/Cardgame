@@ -50,6 +50,7 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .dino.ready{cursor:pointer;box-shadow:0 0 10px #ffd65a}
 .dino.ready:hover{transform:translateY(-3px)}
 .dino.tired{opacity:.6}
+.dmut{font-size:12px;line-height:1.1;letter-spacing:-1px}
 .dino.weapon{border-color:#c9d6e8;background:linear-gradient(#2a3242,#11141c)}
 .dino.band{border-color:#7d6bff;background:linear-gradient(#2a2346,#120f1d)}
 .dart{font-size:32px;line-height:1.2}
@@ -642,8 +643,8 @@ const CARDS = {
     play: async x => { gainCoins(x.p, 1); x.p.investNext += 3; } },
   goldbar: { hero: 'chuta', name: '金の延べ棒', type: 'attack', cost: 2, atk: 2, def: 2, dc: 0, price: 5, art: '🧈', text: '【使用時】所持コイン3枚につきATK+1（最大+4）',
     play: async x => { x.atk += Math.min(4, Math.floor(x.p.coins / 3)); } },
-  pilfer: { hero: 'chuta', name: 'ちょろまかし', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🤏', text: '【使用時】相手からコインを2奪う（足りない分はライフを奪う）', play: async x => stealCoins(x.p, x.o, 2) },
-  collector: { hero: 'chuta', name: '借金取り', type: 'attack', cost: 2, atk: 4, def: 2, dc: 0, price: 4, art: '📜', text: '【使用時】相手からコインを2奪う（足りない分はライフを奪う）', play: async x => stealCoins(x.p, x.o, 2) },
+  pilfer: { hero: 'chuta', name: 'ちょろまかし', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🤏', text: '【使用時】相手からコインを1奪う（足りない分はライフを奪う）', play: async x => stealCoins(x.p, x.o, 1) },
+  collector: { hero: 'chuta', name: '借金取り', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '📜', text: '【使用時】相手からコインを2奪う（足りない分はライフを奪う）', play: async x => stealCoins(x.p, x.o, 2) },
   extort: { hero: 'chuta', name: '強請り', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '😼', text: '【使用時】相手からコインを3奪う（足りない分はライフを奪う）', play: async x => stealCoins(x.p, x.o, 3) },
   bargain: { hero: 'chuta', name: '大バーゲン', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '🛍️', text: '【使用時】このターン、道具屋の価格がさらに-2',
     play: async x => { x.p.discount += 2; log('大バーゲン開催！'); } },
@@ -827,7 +828,7 @@ const HEROES = {
       use: async p => { p.used.a0 = 1; p.mana -= 1; await draw(p, 1); } }] },
   chuta: { name: '商人ネズミ チュー太', short: 'チュー太', title: '金で殴る小動物', art: '🐭', color: '#f2c230', hp: 23, diff: '★★★', sig: 'stash',
     pool: ['cointhrow', 'bribe', 'merc', 'goldshield', 'invest', 'stock', 'extort', 'goldbar', 'collector'], draft: ['stash', 'pickup', 'pilfer', 'stock', 'invest'],
-    passive: '【商才】ターン開始時のコイン+1（計+2）。道具屋の価格-1。【財力】コイン4枚につき全ての攻撃ATK+1（最大+3）。',
+    passive: '【商才】ターン開始時のコイン+1（計+2）。道具屋の価格-1。【即売】道具屋で買ったカードは手札に入り、そのターンすぐ使える。【財力】コインを4枚以上持っていれば全ての攻撃ATK+1。',
     style: 'コインを稼ぎ、買い、投げる。HPは低いが経済力は随一。',
     actives: [{ name: '両替', cost: 'コイン3', text: 'コイン3を払い、マナ+1（1ターン1回）',
       can: p => p.coins >= 3 && !p.used.a0,
@@ -903,15 +904,16 @@ Object.assign(HEROES, {
       } }] },
   dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 15, diff: '★★★', sig: 'raptor',
     pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil', 'ankylo', 'spino', 'wakeroar'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
-    passive: '【群れの狩り】恐竜が攻撃すると、このターンの以降の恐竜の攻撃コスト-1。恐竜は場に残り（最大2体）、相手は恐竜も攻撃対象に選べる。',
+    passive: '【突然変異】餌やりした恐竜に、5種類（顎・感覚・共生・俊敏・翼）から3つ提示された能力を1つ付ける（1体1つまで）。【群れの狩り】恐竜が攻撃すると、このターンの以降の恐竜の攻撃コスト-1。恐竜は場に残り（最大2体）、相手は恐竜も攻撃対象に選べる。',
     style: '召喚した恐竜は使っても場に残る。恐竜を並べ、マナを払って次々に襲わせる。',
-    actives: [{ name: '餌やり', cost: '手札1枚', text: '手札1枚を捨て、恐竜1体のHP+2。このターン恐竜の攻撃コスト-1（1ターン1回）',
+    actives: [{ name: '餌やり', cost: '手札1枚', text: '手札1枚を捨て、恐竜1体のHP+2。このターン恐竜の攻撃コスト-1。さらにその恐竜が【突然変異】する（1ターン1回）',
       can: p => p.field.length > 0 && p.hand.length > 0 && !p.used.a0,
       use: async p => {
         const s = await choose({ who: p, title: '餌やり：捨てるカード', cards: p.hand, min: 1, max: 1, cancelable: true, ai: 'worst' }); if (!s) return;
         const dn = await pickOwnDino(p, '餌を与える恐竜'); if (!dn) return;
         p.used.a0 = 1; discardFromHand(p, s[0]); dn.hp += 2; dn.maxHp += 2; p.dinoDiscount += 1;
         log(`${dn.name}に餌を与えた（HP+2・攻撃コスト-1）`); render();
+        await mutate(p, dn);
       } }] },
   pyro: { name: '炎の魔術師イグニス', short: 'イグニス', title: '身を焦がす紅蓮の術者', art: '🔥', color: '#ff6a2a', hp: 20, diff: '★★★', sig: 'firebolt',
     pool: ['flameblade', 'flamethrower', 'blast', 'flamewall', 'rebirth', 'ifrit'], draft: ['firebolt', 'cinder', 'soulburn', 'flamewall'],
@@ -1102,13 +1104,33 @@ const dinoCost = (p, dn) => Math.max(0, dn.acost - p.dinoDiscount);
 function summonDino(p, c) {
   if (p.field.length >= MAX_FIELD) { p.discard.push(c); log('場がいっぱいで召喚できなかった'); return; }
   const s = D(c).dino;
-  const dn = { uid: UID++, card: c, name: D(c).name, art: D(c).art, hp: s.hp, maxHp: s.hp, atk: s.atk, acost: s.acost, fly: !!s.fly, taunt: !!s.taunt, thorns: !!s.thorns, hit: s.hit || null, exhausted: true }; // 召喚したターンは攻撃できない
+  const dn = { uid: UID++, card: c, name: D(c).name, art: D(c).art, hp: s.hp, maxHp: s.hp, atk: s.atk, acost: s.acost, fly: !!s.fly, taunt: !!s.taunt, thorns: !!s.thorns, hit: s.hit || null, exhausted: true, muts: [], swiftUsed: false }; // 召喚したターンは攻撃できない
   p.field.push(dn); log(`${pname(p)}は「${dn.name}」を召喚した！`);
 }
 async function damageDino(owner, dn, n, src = '') {
   dn.hp -= n; fx(owner.idx, `${dn.art}-${n}`, 'dmg'); log(`${dn.name}に${n}ダメージ${src ? '（' + src + '）' : ''}`, 'dmg');
   if (dn.hp <= 0) { removeFrom(owner.field, dn); owner.discard.push(dn.card); log(`${dn.name}は倒れた…`, 'dmg'); }
   render();
+}
+// 【突然変異】3つ提示された能力から1つを恐竜に付与（1体につき1つまで）
+const MUTATIONS = {
+  jaw: { name: '発達した顎', art: '🦷', text: 'ATK+1', apply: dn => { dn.atk += 1; } },
+  sense: { name: '鋭い感覚', art: '👃', text: '攻撃がヒットしたら1枚引く' },
+  symbio: { name: '共生', art: '💚', text: '攻撃するたびヒーローのHP2回復' },
+  swift: { name: '俊敏', art: '💨', text: '1ターンにもう1回攻撃できる' },
+  wing: { name: '翼', art: '🪽', text: '飛行：攻撃は防御不能', apply: dn => { dn.fly = true; } },
+};
+const MAX_MUT = 1;
+async function mutate(p, dn) {
+  if (dn.muts.length >= MAX_MUT) { log(`${dn.name}はこれ以上変異できない`, 'sys'); return; }
+  const av = Object.keys(MUTATIONS).filter(k => !dn.muts.includes(k) && !(k === 'wing' && dn.fly));
+  const offer = shuffle(av).slice(0, 3); if (!offer.length) return;
+  const pref = ['swift', 'jaw', 'sense', 'wing', 'symbio'];
+  const k = await chooseOption({ who: p, title: `🧬 突然変異：${dn.art}${dn.name}に付ける能力`, sub: '1体につき1つまで付けられます',
+    options: offer.map(k => ({ label: `${MUTATIONS[k].art} ${MUTATIONS[k].name}：${MUTATIONS[k].text}`, value: k })),
+    aiFn: () => (p.hp <= p.maxHp / 2 && offer.includes('symbio')) ? 'symbio' : pref.find(x => offer.includes(x)) });
+  dn.muts.push(k); if (MUTATIONS[k].apply) MUTATIONS[k].apply(dn);
+  log(`🧬 ${dn.name}が突然変異！「${MUTATIONS[k].name}」（${MUTATIONS[k].text}）`, 'heal'); fx(p.idx, `🧬${MUTATIONS[k].art}`, 'heal'); render();
 }
 async function pickOwnDino(p, title) {
   if (!p.field.length) return null;
@@ -1133,7 +1155,9 @@ function dinoClick(pi, uid) {
   run(() => dinoAttack(p, dn));
 }
 async function dinoAttack(p, dn) {
-  p.mana -= dinoCost(p, dn); dn.exhausted = true;
+  p.mana -= dinoCost(p, dn);
+  if (dn.muts.includes('swift') && !dn.swiftUsed) dn.swiftUsed = true; else dn.exhausted = true;
+  if (dn.muts.includes('symbio')) await heal(p, 2);
   await resolveAttack({ p, o: opp(p), card: dn.card, atk: dn.atk, dmg: 0, dino: dn });
   // 群れの狩り：恐竜が攻撃すると、このターンの恐竜の攻撃コスト-1（1ターンに1回だけ）
   if (p.heroId === 'dino' && !p.used.pack) { p.used.pack = 1; p.dinoDiscount++; }
@@ -1404,6 +1428,7 @@ function showRules() {
   <p><b>【エコーX】</b>（ゼノ）：そのカードより前にこのターン使ったカードの枚数＋1回、効果をくり返す（最大X回）。「共鳴増幅」中は上限Xが2倍。</p>
   <p><b>白虎刀</b>（シグレ）：手札に入らない専用武器。場の白虎刀をタップ（または能力ボタン）で、💧2を払って攻撃（基本1ターン1回）。砥石・玉鋼でATKがずっと上がり、二の太刀などで振れる回数が増える。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
+  <p><b>【突然変異】</b>（レックス）：餌やりした恐竜に、3つ提示された能力から1つを付ける（発達した顎：ATK+1／鋭い感覚：ヒットで1枚引く／共生：攻撃するたびHP2回復／俊敏：1ターン2回攻撃／翼：防御不能）。1体につき1つまで。</p>
   <p><b>合成</b>（ギア）：手札2枚を1枚にまとめる。コスト・ATK・DEFは合計（コストは−1）、効果は全部発動。使用後は元のカードに分解されて捨て札へ。</p>
   <h3>デッキ構築</h3>
   <p>道具屋で買ったカードは捨て札へ。共通カード5枚＋自分のヒーロー専用カード3枚が並ぶ。<br><b>お祓い</b>（🪙3、1ターン1回）：手札1枚を破棄。</p>
@@ -1420,7 +1445,7 @@ function shopHTML() {
   const p = cur();
   const row = (arr, src) => arr.map((c, i) => { const pr = price(p, D(c)); return `<div class="shopitem">${cardHTML(c)}<button ${p.coins >= pr ? '' : 'disabled'} onclick="buy('${src}',${i})">🪙${pr} 購入</button></div>`; }).join('') || '<span class="msub">売り切れ</span>';
   return `<div class="mbox" style="--pc:${p.hero.color}"><div class="mtitle"><span class="pl" style="--pc:${p.hero.color}">${plabel(p)} ${p.hero.short}</span>🛒 道具屋　<span class="coin">🪙 ${p.coins}</span></div>
-  <div class="msub">買ったカードは捨て札に入ります。${p.heroId === 'chuta' ? '（商才：全品1コイン引き）' : ''}${p.discount ? `（値切り中：-${p.discount}）` : ''}</div>
+  <div class="msub">${p.heroId === 'chuta' ? '即売：買ったカードは手札に入り、すぐ使えます（商才：全品1コイン引き）' : '買ったカードは捨て札に入ります。'}${p.discount ? `（値切り中：-${p.discount}）` : ''}</div>
   <div style="overflow-y:auto;max-height:72vh">
   <div class="sect">共通カード</div><div class="shoprow">${row(G.market, 'm')}</div>
   <div class="sect">${p.hero.short}専用カード</div><div class="shoprow">${row(p.heroRow, 'h')}</div>
@@ -1430,8 +1455,9 @@ function shopHTML() {
 function buy(src, i) {
   const p = cur(); const arr = src === 'm' ? G.market : p.heroRow; const c = arr[i]; if (!c) return false;
   const pr = price(p, D(c)); if (p.coins < pr) return false;
-  p.coins -= pr; arr.splice(i, 1); p.discard.push(c);
-  log(`${pname(p)}は「${D(c).name}」を購入（🪙${pr}）`, 'coin');
+  p.coins -= pr; arr.splice(i, 1);
+  if (p.heroId === 'chuta') p.hand.push(c); else p.discard.push(c);
+  log(`${pname(p)}は「${D(c).name}」を購入（🪙${pr}）${p.heroId === 'chuta' ? '→ 手札へ' : ''}`, 'coin');
   const deck = src === 'm' ? G.marketDeck : p.heroDeck; if (deck.length) arr.splice(i, 0, deck.pop());
   if (M && M.type === 'shop') renderModal();
   render(); return true;
@@ -1484,7 +1510,7 @@ async function startTurn() {
   p.anchor = false; p.wSwings = 1; p.wUsed = 0; p.wTurnAtk = 0; p.wCoinBonus = 0; p.wDisc = 0;
   p.relicsUsed = 0; p.lore = false; p.cardsThisTurn = 0; p.echoMul = 1;
   p.keisei = false; p.charmBonus = 0; p.bandAtk = 0; p.band.forEach(m => { m.used = 0; m.max = 1; });
-  p.field.forEach(dn => dn.exhausted = false);
+  p.field.forEach(dn => { dn.exhausted = false; dn.swiftUsed = false; });
   if (p.shield) { log(`${pname(p)}の聖なる盾（${p.shield}）が消えた`, 'holy'); p.shield = 0; }
   // ゴーレムの「石化」は相手のターン開始時に解ける
   for (const u of G.tempSeals) G.seals.delete(u);
@@ -1581,7 +1607,7 @@ async function resolveAttack(a) {
     if (d.play) for (let r = 0; r < (a.reps || 1); r++) await d.play(a);
     a.atk += p.turnAtk + p.rageNow + pending;
     if (p.heroId === 'allen' && p.attacksThisTurn >= 1) a.atk += 2;
-    if (p.heroId === 'chuta') a.atk += Math.min(3, Math.floor(p.coins / 4));
+    if (p.heroId === 'chuta' && p.coins >= 4) a.atk += 1;
     if (p.heroId === 'wolf' && fullMoon(p)) a.atk += 1;
     if (d.elf && p.elfBless) a.atk += 1;
     if (d.elf && p.heroId === 'elf' && p.elvesThisTurn >= 3) a.atk += 1;
@@ -1614,6 +1640,7 @@ async function resolveAttack(a) {
     if (p.heroId === 'carmilla') await heal(p, 1);
     if (a.weapon) { log('武士の誉れ', 'coin'); gainCoins(p, 1 + p.wCoinBonus); }
     if (onHit) await onHit(a);
+    if (dino && dino.muts && dino.muts.includes('sense')) { log(`${dino.name}の鋭い感覚：1枚引く`); await draw(p, 1); }
     await stanceTrigger(o, 'hit', a);
   } else {
     G.stage.result = a.atk > 0 ? '完全防御！' : '攻撃は無効化された'; log(`${pname(o)}は攻撃を防ぎきった`); render();
@@ -1747,6 +1774,7 @@ function aiTarget(p, o, a, opts) {
 function draftScore(p, c) {
   const d = D(c);
   if (p.heroId === 'rocker' && d.aud) return 4 + (d.atk || 0) * 0.3;
+  if (p.heroId === 'chuta') { if (['invest', 'stock', 'stash', 'pickup'].includes(c.id)) return p.coins >= 6 ? 0.5 : 2; if (d.type === 'attack' || ['cointhrow', 'pilfer', 'extort'].includes(c.id)) return 4 + (d.atk || 0) * 0.3; }
   if (p.heroId === 'pirate') { if (d.undead) return 5 + (d.atk || 0) * 0.5; if (d.treasure) return 2.5; if (c.id === 'bilge' || c.id === 'maelstrom') return 4; }
   return playScore(p, c);
 }
@@ -1781,6 +1809,7 @@ async function aiTurn(p) {
   if (lv >= 2 && p.coins >= 3 && p.hand.some(c => D(c).type === 'curse')) {
     const c = p.hand.find(c => D(c).type === 'curse'); removeFrom(p.hand, c); trash(p, c); p.coins -= 3; p.used.purify = 1; await step();
   }
+  if (p.heroId === 'chuta' && lv >= 2) await aiBuy(p, lv);
   for (let guard = 0; guard < 40; guard++) {
     if (await aiAction(p, o, lv)) { await step(); continue; }
     break;
@@ -1823,7 +1852,7 @@ async function aiAction(p, o, lv) {
   if (p.heroId === 'wolf' && lv >= 2 && A[0].can(p) && p.mana >= 3 && playable().filter(c => D(c).moon === 'full').length >= 1) return useAb(0);
   if (p.heroId === 'pyro' && lv >= 2 && A[0].can(p) && (p.burnCount >= 3 || (lv === 3 && p.mana >= 5)) && p.hand.filter(c => D(c).burn).length >= 2) return useAb(0);
   if (p.heroId === 'elf' && lv >= 2 && A[0].can(p) && p.hand.filter(c => D(c).elf && D(c).type === 'attack' && canPlay(p, c) && D(c).cost <= p.mana - 3).length >= 2) return useAb(0);
-  if (p.heroId === 'dino' && lv >= 2 && A[0].can(p) && junk()) return useAb(0);
+  if (p.heroId === 'dino' && lv >= 2 && A[0].can(p) && (junk() || (p.hand.length >= 3 && p.field.some(d => d.muts.length < MAX_MUT)))) return useAb(0);
   // 召喚 → 恐竜の攻撃
   if (lv >= 2) {
     const sm = playable().filter(c => D(c).type === 'summon').sort((x, y) => D(y).dino.atk - D(x).dino.atk);
@@ -1889,7 +1918,7 @@ async function aiBuy(p, lv) {
     let pick;
     if (lv === 1) { if (Math.random() < 0.5) return; pick = rand(opts); }
     else {
-      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0) + (p.heroId === 'pirate' && D(x[2]).undead ? 2 : 0) + (p.heroId === 'rocker' && D(x[2]).aud ? 1.5 : 0);
+      const score = x => D(x[2]).price + (x[0] === 'h' ? (lv === 3 ? 1.5 : 0.5) : 0) + (D(x[2]).heal && lv === 3 ? -1 : 0) + (p.heroId === 'pirate' && D(x[2]).undead ? 2 : 0) + (p.heroId === 'rocker' && D(x[2]).aud ? 1.5 : 0) + (p.heroId === 'chuta' ? (D(x[2]).type === 'attack' || ['cointhrow', 'extort', 'collector'].includes(x[2].id) ? 2 : ['invest', 'stock', 'goldshield'].includes(x[2].id) ? -3 : 0) : 0);
       opts.sort((a, b) => score(b) - score(a)); pick = opts[0];
       if (lv === 3 && D(pick[2]).price <= 2) return;
     }
@@ -1917,10 +1946,11 @@ function cardHTML(c, opt = {}) {
 function dinoHTML(p, dn, main) {
   const cost = dinoCost(p, dn), can = main && !dn.exhausted && cost <= p.mana;
   const tag = dn.taunt ? '守護' : dn.fly ? '飛行' : dn.thorns ? '棘' : '';
+  const mut = dn.muts && dn.muts.length ? `<div class="dmut" title="${dn.muts.map(k => MUTATIONS[k].name + '：' + MUTATIONS[k].text).join('／')}">${dn.muts.map(k => MUTATIONS[k].art).join('')}</div>` : '';
   return `<div class="dino ${can ? 'ready' : ''} ${dn.exhausted ? 'tired' : ''}" data-cid="${dn.card.id}" onclick="dinoClick(${p.idx},${dn.uid})" title="${dn.name}${can ? '：クリックで攻撃' : ''}">
     ${tag ? `<div class="dtag">${tag}</div>` : ''}<div class="dart">${dn.art}</div><div class="dname">${dn.name}</div>
     <div class="dhp"><div style="width:${Math.max(0, 100 * dn.hp / dn.maxHp)}%"></div><span>❤${dn.hp}/${dn.maxHp}</span></div>
-    <div class="dst"><span class="atk">⚔${dn.atk + p.dinoAtk}</span> <span class="mana">💧${cost}</span></div>${dn.exhausted ? '<div class="dz">待機中</div>' : ''}</div>`;
+    <div class="dst"><span class="atk">⚔${dn.atk + p.dinoAtk}</span> <span class="mana">💧${cost}</span></div>${mut}${dn.exhausted ? '<div class="dz">待機中</div>' : dn.swiftUsed ? '<div class="dz">あと1回</div>' : ''}</div>`;
 }
 function panelHTML(p, pos = '') {
   const h = p.hero, active = G.turn === p.idx, cpu = isCPU(p);
@@ -2105,7 +2135,7 @@ function netPump() {
 }
 // ズレ検出：ターン開始時の状態を要約して送り合う
 function netHash() {
-  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor, p.aud, p.keisei, p.ward, p.cardsThisTurn])]);
+  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor, p.aud, p.keisei, p.ward, p.cardsThisTurn, p.field.map(d => d.muts.join())])]);
   let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h;
 }
 function netCheck() {
