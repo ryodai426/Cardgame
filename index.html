@@ -124,6 +124,10 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .rules{line-height:1.7;overflow-y:auto;max-height:70vh;padding-right:8px;max-width:760px}
 .rules h3{color:#f0d080;margin:10px 0 2px;font-size:14px}
 .rules p{margin:2px 0}
+.rules.guide{max-width:780px}
+.rules.guide img{width:100%;border-radius:8px;border:1px solid #3a3150;display:block}
+.rules .legend{margin:6px 0 4px;padding-left:1.6em;display:grid;grid-template-columns:1fr 1fr;gap:2px 16px}
+.rules .legend li::marker{color:#ffd65a;font-weight:bold}
 #preview{position:fixed;top:8px;right:8px;width:244px;height:320px;display:flex;align-items:center;justify-content:center;z-index:60;pointer-events:none}
 #fxl{position:fixed;inset:0;pointer-events:none;z-index:70}
 .fx{position:absolute;font-size:34px;font-weight:900;animation:floatup 1.2s ease-out forwards;text-shadow:0 0 6px #000,0 0 2px #000}
@@ -209,7 +213,9 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
   .mbtns{justify-content:stretch}.mbtns button{flex:1;padding:11px 8px;font-size:14px}
   .msum{font-size:13px}
   .shoprow{gap:8px;justify-content:center}.shopitem .card{--s:.88}
-  .rules{max-height:none;font-size:12px}
+  .rules{max-height:none;font-size:12px;flex:1 1 auto;min-height:0;overflow-y:auto}
+  .rules .legend{grid-template-columns:1fr}
+  .rules.guide img{max-width:330px;margin:0 auto}
   #preview{inset:0;width:auto;height:auto;top:0;right:0;display:none;background:rgba(5,3,10,.6);z-index:85}
   #preview.show{display:flex}
   .title{gap:12px;padding:12px}
@@ -1472,9 +1478,24 @@ function showLog() {
   if (!G || (M && M.res && !M.view)) return;
   M = { type: 'html', title: '📃 ログ', html: `<div class="log" style="max-height:65vh;border:none">${G.log.map(l => `<div class="${l.cls}">${l.t}</div>`).join('')}</div>` }; renderModal();
 }
-function showRules() {
+// かんたんルール（最初に表示）。くわしいルールはボタンで切り替え
+function showRules(detail = false) {
   if (M && M.res && !M.view) { toast('選択が終わってから開いてください'); return; }
-  M = { type: 'html', title: '📜 ルール', html: `<div class="rules">
+  if (!detail) {
+    M = { type: 'html', title: '📜 かんたんルール', html: `<div class="rules guide">
+  <picture><source media="(max-width: 760px) and (orientation: portrait)" srcset="img/guide-sp.jpg"><img src="img/guide-pc.jpg" alt="ゲーム画面の説明"></picture>
+  <ol class="legend"><li><b>相手</b>のヒーローと手札（丸見え）</li><li><b>あなた</b>のHP・💧マナ・🪙コイン</li><li><b>手札</b>：タップで使う</li><li><b>ヒーロー能力</b>（ヒーローごとに違う）</li><li><b>戦場</b>：攻撃の結果が出る</li><li><b>道具屋</b>（コインでカードを買う）・<b>ターン終了</b></li></ol>
+  <h3>🏆 勝ち方</h3><p>相手のHPを0にすれば勝ち。</p>
+  <h3>🔁 1ターンの流れ</h3>
+  <p>① 3枚の中からカードを1枚もらう<br>② 相手の手札を1枚えらんで<b>威圧</b>（そのカードは使えなくなる）<br>③ 💧マナを払ってカードを使う／🪙コインで道具屋<br>④ ターン終了：手札を全部捨てて5枚引き、マナは5に戻る</p>
+  <h3>⚔ 攻撃と防御</h3>
+  <p>攻撃されたら、手札を<b>2枚まで</b>出して防御できる。<b>ATK − 防御カードのDEF合計</b>がダメージになる。<br>⚠ 防御に使ったカードとマナは、次の自分のターンには使えない。守りすぎ注意！</p>
+  <h3>💡 あと少しだけ</h3>
+  <p>・威圧されたカードは ❤HP${UNSEAL.hp}／🪙コイン${UNSEAL.coin}／💧マナ${UNSEAL.mana} を払えば解除できる<br>・ラウンド${MIASMA_START}からは毎ターン瘴気ダメージ。長引くほど不利<br>・ヒーローの顔をタップすると、そのヒーローの能力の説明が見られる<br>・カードにマウスを乗せる（スマホは長押し）と拡大表示</p>
+  <p style="text-align:center;margin-top:10px"><button onclick="showRules(true)">📖 くわしいルール・キーワード一覧</button></p></div>` };
+    renderModal(); return;
+  }
+  M = { type: 'html', title: '📖 くわしいルール', html: `<p style="margin:0 0 6px"><button onclick="showRules()">← かんたんルールに戻る</button></p><div class="rules">
   <h3>勝利条件</h3><p>相手ヒーローのHPを0にすれば勝ち。</p>
   <h3>ターンの流れ</h3>
   <p>① <b>開始</b>：コイン+1（先攻の最初のターンはマナ4／後攻は初期コイン+2）</p>
