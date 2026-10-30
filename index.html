@@ -696,8 +696,6 @@ const CARDS = {
     play: async x => { if (x.grave) x.atk += 2; } },
   doubloon: { hero: 'pirate', treasure: true, name: '呪いの金貨', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🪙', text: '【使用時】コイン+1\n【沈んだ時】コイン+2',
     play: async x => gainCoins(x.p, 1), sunk: async x => gainCoins(x.p, 2) },
-  chest: { hero: 'pirate', treasure: true, name: '沈んだ宝箱', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🧰', text: '【使用時】コイン+2\n【沈んだ時】コイン+1。1枚引く',
-    play: async x => gainCoins(x.p, 2), sunk: async x => { gainCoins(x.p, 1); await draw(x.p, 1); } },
   gunner: { hero: 'pirate', undead: true, name: '亡者の砲手', type: 'attack', cost: 2, atk: 2, def: 1, dc: 0, price: 4, art: '💣', text: '【捨て札から】ATK+3・防御不能',
     graveUnblock: true, play: async x => { if (x.grave) x.atk += 3; } },
   boarders: { hero: 'pirate', undead: true, name: '亡者の斬り込み隊', type: 'attack', cost: 3, atk: 3, def: 2, dc: 0, price: 5, art: '☠️', text: '【捨て札から】ATK+4。ヒット時 コイン+2',
@@ -708,10 +706,14 @@ const CARDS = {
     play: async x => { await forceDiscard(x.p, x.o, 1); await sink(x.p, 1); } },
   kraken: { hero: 'pirate', name: '海魔クラーケン', type: 'attack', cost: 5, atk: 5, def: 1, dc: 0, price: 7, art: '🦑', text: '【使用時】捨て札の【亡者】1枚につきATK+1（最大+5）',
     play: async x => { x.atk += Math.min(5, graveZombies(x.p).length); } },
-  idol: { hero: 'pirate', treasure: true, name: '呪われた黄金像', type: 'skill', cost: 0, def: 1, dc: 0, price: 4, art: '🏺', text: '【使用時】コイン+3。自分に1ダメージ\n【沈んだ時】コイン+3',
-    play: async x => { gainCoins(x.p, 3); await loseHp(x.p, 1, '黄金像の呪い'); }, sunk: async x => gainCoins(x.p, 3) },
   ghostship: { hero: 'pirate', undead: true, name: '幽霊船の亡霊', type: 'attack', cost: 4, atk: 3, def: 2, dc: 0, price: 6, art: '👻', text: '【捨て札から】ATK+4。ヒット時 相手の手札を1枚選んで捨てさせる',
     play: async x => { if (x.grave) x.atk += 4; }, hit: async x => { if (x.grave) await forceDiscard(x.p, x.o, 1); } },
+  floater: { hero: 'pirate', undead: true, rise: true, name: '浮かび上がる水夫', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🧟', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【防御時】【沈没】2',
+    sunk: async x => autoRise(x.p, x.card), defend: async x => { await sink(x.p, 2); } },
+  chainzombie: { hero: 'pirate', undead: true, rise: true, name: '錨鎖の亡者', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '⛓️', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【ヒット時】【沈没】1（仲間を海に引きずり込む）',
+    sunk: async x => autoRise(x.p, x.card), hit: async x => { await sink(x.p, 1); } },
+  bosun: { hero: 'pirate', undead: true, rise: true, name: '亡霊船の甲板長', type: 'attack', cost: 3, atk: 3, def: 3, dc: 0, price: 5, art: '🏴‍☠️', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【防御時】【沈没】3',
+    sunk: async x => autoRise(x.p, x.card), defend: async x => { await sink(x.p, 3); } },
   anchorblow: { hero: 'pirate', name: '錨の一撃', type: 'attack', cost: 2, atk: 3, def: 3, dc: 0, price: 4, art: '⚓', text: '【防御時】【沈没】2', defend: async x => { await sink(x.p, 2); } },
 
   // ---- 白虎の侍シグレ（白虎刀は手札に入らない専用武器） ----
@@ -958,19 +960,16 @@ Object.assign(HEROES, {
       use: async p => { p.used.a0 = 1; if (p.burnCount >= 3) p.burnCount -= 3; else p.mana -= 3; p.inferno = true; log('イグニスは炎の化身となった！ 自傷は相手へ！', 'dmg'); fx(p.idx, '炎の化身!', 'dmg'); } }] },
 });
 Object.assign(HEROES, {
-  pirate: { name: '深海の亡霊船長 ヴァンデル', short: 'ヴァンデル', title: '呪われた幽霊船の主', art: '🏴‍☠️', color: '#2fa39a', hp: 22, diff: '★★★', sig: 'cutlass',
-    pool: ['chest', 'gunner', 'boarders', 'maelstrom', 'locker', 'kraken', 'idol', 'ghostship', 'anchorblow'], draft: ['cutlass', 'bilge', 'deckhand', 'doubloon'],
-    passive: '【幽霊船】1ターンに1回、捨て札の【亡者】カードを「釣り上げ」で使える（使用後は山札の一番下へ戻る）。亡者は手札から使うと弱いが、捨て札から使うと【捨て札から】の効果で強くなる。',
-    style: '自分の山札を捨て札に【沈没】させ、沈んだ財宝でコインを稼ぎ、亡者を釣り上げて襲わせるヴィラン。',
+  pirate: { name: '深海の亡霊船長 ヴァンデル', short: 'ヴァンデル', title: '呪われた幽霊船の主', art: '🏴‍☠️', color: '#2fa39a', hp: 18, diff: '★★★', sig: 'cutlass',
+    pool: ['gunner', 'boarders', 'maelstrom', 'locker', 'kraken', 'ghostship', 'anchorblow', 'bosun', 'chainzombie'], draft: ['cutlass', 'bilge', 'doubloon', 'floater'],
+    passive: '【幽霊船】1ターンに1回、捨て札の【亡者】カードを「釣り上げ」で使える（使用後は山札の一番下へ戻る）。【浮上】浮かび上がる水夫・錨鎖の亡者・亡霊船の甲板長は、山札から捨て札に沈むと（相手のターンでも）自動で浮かび上がって攻撃する。',
+    style: '自分の山札を捨て札に【沈没】させ、亡者を釣り上げたり浮かび上がらせたりして襲わせるヴィラン。守るたびに沈む亡者が反撃する。',
     actives: [
-      { name: '錨上げ', cost: 'コイン3（捨て札の財宝1枚につき-1）', costNow: p => `コイン${anchorCost(p)}`, text: 'このターン、捨て札から使うカードのマナコスト-2（1ターン1回）。捨て札の【財宝】1枚につき必要なコイン-1',
-        can: p => !p.used.a0 && !p.anchor && p.coins >= anchorCost(p),
-        use: async p => { p.used.a0 = 1; const c = anchorCost(p); p.coins -= c; p.anchor = true; log(`錨を上げろ！（🪙${c}）捨て札から使うカードのマナ-2`, 'coin'); fx(p.idx, '⚓錨上げ!', 'info'); render(); } },
       { name: '釣り上げ', cost: 'カードのマナ', text: '捨て札の【亡者】1枚を使う（1ターン1回）',
         can: p => !p.used.fish && graveZombies(p).some(c => graveCost(p, c) <= p.mana),
         use: async p => {
           p.discard = flatCards(p.discard);
-          const s = await choose({ who: p, title: '⚓ 釣り上げ：捨て札から使う【亡者】', sub: `捨て札から使うと【捨て札から】の効果が発動。使用後は山札の一番下へ。${p.anchor ? '（錨上げ中：マナ-2）' : ''}`,
+          const s = await choose({ who: p, title: '⚓ 釣り上げ：捨て札から使う【亡者】', sub: '捨て札から使うと【捨て札から】の効果が発動。使用後は山札の一番下へ。',
             cards: graveZombies(p), min: 1, max: 1, cancelable: true, ai: 'best', disabled: c => graveCost(p, c) > p.mana ? 'マナ不足' : null,
             extra: c => `<div class="price" style="border-color:#6fc3ff;color:#6fc3ff">💧${graveCost(p, c)}</div>` });
           if (!s) return;
@@ -1075,9 +1074,9 @@ Object.assign(HEROES, {
       use: async p => { p.coins -= 5; p.echoMul = 2; log('共鳴増幅！ このターンのエコー上限2倍', 'info'); fx(p.idx, '共鳴増幅!', 'info'); render(); } }] },
 });
 Object.assign(HEROES, {
-  knight: { name: '白銀の騎士 レオン', short: 'レオン', title: '誓いを貫く王国の盾', art: '🏇', color: '#6a8cc7', hp: 19, diff: '★☆☆', sig: 'lance',
+  knight: { name: '白銀の騎士 レオン', short: 'レオン', title: '誓いを貫く王国の盾', art: '🏇', color: '#6a8cc7', hp: 17, diff: '★☆☆', sig: 'lance',
     pool: ['greatshield', 'duel', 'charge', 'oathsword', 'silverarmor', 'joust', 'remount', 'banner'], draft: ['lance', 'shieldbash', 'remount', 'banner'],
-    passive: '【騎乗】最初は馬に乗っている。騎乗中は全ての攻撃ATK+2。一度に5以上のダメージを受けると落馬する。【誓い】ターン開始時に誓いを立てられる（破れない）。守りの誓い：このターン攻撃できないが、次の相手の攻撃全てATK-2。正々堂々の誓い：このターン威圧しないが、攻撃全てATK+2。',
+    passive: '【騎乗】最初は馬に乗っている。騎乗中は全ての攻撃ATK+1。一度に5以上のダメージを受けると落馬する。【誓い】ターン開始時に誓いを立てられる（破れない）。守りの誓い：このターン攻撃できないが、次の相手の攻撃全てATK-2。正々堂々の誓い：このターン威圧しないが、攻撃全てATK+2。',
     style: '馬上からの重い突撃が武器。毎ターンの誓いで攻めと守りを切り替える、王道の騎士。',
     actives: [{ name: '騎乗', cost: 'マナ2', text: '落馬している時、馬に乗り直す（1ターン1回）', can: p => !p.mounted && p.mana >= 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 2; mount(p); } }] },
@@ -1091,7 +1090,7 @@ Object.assign(HEROES, {
         use: async p => { p.used.a1 = 1; await loseHp(p, 2, '全力の窯焚き'); p.pizza.ready = true; log('汗だくで窯を焚いた！ ピッツァが焼き上がった', 'coin'); fx(p.idx, '🍕焼き上がり!', 'coin'); render(); } }] },
 });
 // ---- 騎士 ----
-function mount(p) { p.mounted = true; log(`${pname(p)}は馬に乗った！（騎乗中：攻撃ATK+2）`, 'sys'); fx(p.idx, '🐴騎乗!', 'info'); render(); }
+function mount(p) { p.mounted = true; log(`${pname(p)}は馬に乗った！（騎乗中：攻撃ATK+1）`, 'sys'); fx(p.idx, '🐴騎乗!', 'info'); render(); }
 const OATHS = { guard: { name: '守りの誓い', text: 'このターン攻撃できない。次の相手の攻撃全てATK-2' }, fair: { name: '正々堂々の誓い', text: 'このターン威圧しない。攻撃全てATK+2' } };
 async function chooseOath(p) {
   const opts = [{ label: '🛡️ 守りの誓い：このターン攻撃できない／次の相手の攻撃全てATK-2', value: 'guard' }, { label: '⚔️ 正々堂々の誓い：このターン威圧しない／攻撃全てATK+2', value: 'fair' }, { label: '誓わない', value: null }];
@@ -1144,9 +1143,17 @@ const recallCost = c => Math.max(2, CARDS[c.id].cost + 1);
 const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai', 'oiran', 'rocker', 'explorer', 'alien', 'knight', 'maestro'];
 // ---- 海賊：沈没・亡者 ----
 const ccost = (p, c) => Math.max(0, D(c).cost - (c.costDown || 0));
-const graveCost = (p, c) => Math.max(0, ccost(p, c) - (p.anchor ? 2 : 0));
+const graveCost = (p, c) => ccost(p, c);
 const graveZombies = p => flatCards(p.discard).filter(c => D(c).undead);
-const anchorCost = p => Math.max(0, 3 - flatCards(p.discard).filter(c => D(c).treasure).length);
+// 【浮上】沈んだ亡者が自動で攻撃する（相手のターン中でも割り込む）。攻撃後は山札の一番下へ
+async function autoRise(p, c) {
+  if (!flatCards(p.discard).includes(c)) return;
+  p.discard = flatCards(p.discard); removeFrom(p.discard, c);
+  log(`🌊 「${D(c).name}」が海の底から浮かび上がった！`, 'trash'); fx(p.idx, `${D(c).art}浮上!`, 'info');
+  const st = G.stage;
+  await resolveAttack({ p, o: opp(p), card: c, atk: D(c).atk, dmg: 0, grave: true, auto: true });
+  if (st) G.stage = st;
+}
 // 【沈没】自分の山札の上から捨て札へ（山札が尽きたら止まる。シャッフルはしない）
 async function sink(p, n) {
   const out = [];
@@ -1522,12 +1529,12 @@ function showRules(detail = false) {
   <p><b>自傷</b>（イグニス）：使うと自分もダメージを受けるカード。自傷のたびに灼熱が溜まり、灼熱3で「炎の化身」を無料で発動できる（そのターンの自傷は相手が受ける）。</p>
   <p><b>エルフ</b>（リーフィア）：【エルフ】が付いた低コストカード。使った枚数に応じてドローや攻撃力が増える。</p>
   <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。「冥府の帰還」（コイン2）で手札に呼び戻すと、そのカードのマナコストが1下がる。</p>
-  <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>【財宝】</b>が捨て札にあるほど「錨上げ」が安くなる。</p>
+  <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>浮かび上がる水夫・錨鎖の亡者・亡霊船の甲板長</b>は、山札から沈むと相手のターンでも自動で浮かび上がって攻撃する（攻撃後は山札の一番下へ）。</p>
   <p><b>【魅了X】</b>（朧）：相手はライフをX失う。手札のカードでは防御できない代わりに、<b>手札1枚を捨てる／💧マナ2／🪙コイン2</b>のどれか（おひねり）で無力化できる。コインのおひねりは花魁がもらう。「傾城」中は代償が2倍。</p>
   <p><b>バンドとオーディエンス</b>（レイジ）：ドラマーとベーシストは最初から場にいて倒されない。タップしてマナを払うと攻撃（各1ターン1回）。【観客】カードでオーディエンスを集めるとレベルアップ（4人でLv2／8人でLv3／12人でLv4）し、メンバーが強くなる。</p>
   <p><b>【発見】</b>（ロウ）：5種類の財宝（黄金の偶像：コイン+2／古代の盾：次に受ける攻撃ATK-2／古地図：1枚引く／聖杯：HP2回復／太陽の護符：このターンの攻撃ATK+1）から3つが提示され、1つを手札に加える。財宝はマナ0で使えるが、そのターン中に使わないと消える。</p>
   <p><b>【エコーX】</b>（ゼノ）：そのカードより前にこのターン使ったカードの枚数＋1回、効果をくり返す（最大X回）。「共鳴増幅」中は上限Xが2倍。</p>
-  <p><b>騎乗と誓い</b>（レオン）：騎乗中は攻撃ATK+2、一度に5以上のダメージで落馬（能力「騎乗」で乗り直す）。ターン開始時に誓いを立てられ、このターン中は破れない（守りの誓い：攻撃できないが次の相手の攻撃ATK-2／正々堂々の誓い：威圧しないが攻撃ATK+2）。</p>
+  <p><b>騎乗と誓い</b>（レオン）：騎乗中は攻撃ATK+1、一度に5以上のダメージで落馬（能力「騎乗」で乗り直す）。ターン開始時に誓いを立てられ、このターン中は破れない（守りの誓い：攻撃できないが次の相手の攻撃ATK-2／正々堂々の誓い：威圧しないが攻撃ATK+2）。</p>
   <p><b>ピッツァ</b>（マエストロ）：【トッピング】カードで具を乗せ（4つまで）、次の自分のターン開始時に焼き上がる（能力「全力の窯焚き」でHP2を払えばすぐ焼ける）。焼き上がったらタップで投げる（💧1・ATK3＋具）。焼き上がってから1ターン投げないと焦げてATK-2。</p>
   <p><b>白虎刀</b>（シグレ）：手札に入らない専用武器。場の白虎刀をタップ（または能力ボタン）で、💧2を払って攻撃（基本1ターン1回）。砥石・玉鋼でATKがずっと上がり、二の太刀などで振れる回数が増える。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
@@ -1712,8 +1719,8 @@ async function playCard(p, c, grave = false) {
 // a.dino があれば恐竜の攻撃（カードの使用時効果やヒーロー補正は乗らない）
 async function resolveAttack(a) {
   const { p, o, card } = a; const d = D(card); const dino = a.dino, wpn = a.weapon || a.unit;
-  if (wpn) a.atk += p.turnAtk + (a.weapon ? p.wTurnAtk : a.pizza ? 0 : p.bandAtk);
-  if (!dino && p.heroId === 'knight') { if (p.mounted) a.atk += 2; if (p.oath === 'fair') a.atk += 2; }
+  if (a.auto) {} // 自動攻撃（浮かび上がる亡者）は補正なし
+  else if (wpn) a.atk += p.turnAtk + (a.weapon ? p.wTurnAtk : a.pizza ? 0 : p.bandAtk);
   else if (!dino) {
     const pending = p.nextAtkPending; p.nextAtkPending = 0;
     if (d.play) for (let r = 0; r < (a.reps || 1); r++) await d.play(a);
@@ -1724,7 +1731,8 @@ async function resolveAttack(a) {
     if (d.elf && p.elfBless) a.atk += 1;
     if (d.elf && p.heroId === 'elf' && p.elvesThisTurn >= 3) a.atk += 1;
     if (p.attacksThisTurn === 0 && p.storedAtk) { a.atk += p.storedAtk; p.storedAtk = 0; }
-  } else a.atk += p.dinoAtk;
+  } else if (dino) a.atk += p.dinoAtk;
+  if (!dino && !a.auto && p.heroId === 'knight') { if (p.mounted) a.atk += 1; if (p.oath === 'fair') a.atk += 2; }
   p.attacksThisTurn++;
   const name = dino ? dino.name : d.name, unblock = dino ? dino.fly : wpn ? !!a.pierce : (d.unblockable || a.pierce || (a.grave && d.graveUnblock)), onHit = dino ? dino.hit : wpn ? null : d.hit;
   a.target = await chooseTarget(p, o, a);
@@ -1905,7 +1913,7 @@ function playScore(p, c) {
   if (d.heal && p.hp >= p.maxHp - 1) return -1;
   // 自傷で倒れそうなら使わない
   if (d.burn && !p.inferno && p.hp <= d.burn + 2) return -1;
-  if (d.undead && lv0(p) >= 2 && p.hand.length > 1) return 0.5;
+  if (d.undead && !d.rise && lv0(p) >= 2 && p.hand.length > 1) return 0.5;
   if (d.charm) return (d.charm + p.charmBonus) * 1.5 + 0.5 + (d.hit ? 1 : 0);
   if (c.id === 't_amulet' && !p.hand.some(h => h !== c && D(h).type === 'attack' && ccost(p, h) <= p.mana)) return -1;
   let s = d.type === 'attack' ? d.atk + (d.hit ? 1 : 0) + (d.unblockable ? 1.5 : 0) + (d.weather ? -0.5 : 0) : 2 + (d.price || 1) * 0.7;
@@ -1977,14 +1985,13 @@ async function aiAction(p, o, lv) {
   }
   const ready = p.field.filter(x => !x.exhausted && dinoCost(p, x) <= p.mana).sort((x, y) => y.atk - x.atk);
   if (ready.length && (lv >= 2 || Math.random() < 0.6)) { await dinoAttack(p, ready[0]); return true; }
-  // 海賊：沈没カード → 錨上げ → 釣り上げ
+  // 海賊：沈没カード → 釣り上げ
   if (p.heroId === 'pirate') {
     if (lv >= 2) {
       const zero = playable().filter(c => ccost(p, c) === 0 && D(c).type === 'skill' && playScore(p, c) >= 0);
       if (zero.length) { await playCard(p, zero[0]); return true; }
-      if (A[0].can(p) && graveZombies(p).length >= (anchorCost(p) <= 1 ? 1 : 2)) return useAb(0);
     }
-    if (A[1].can(p) && (lv >= 2 || Math.random() < 0.6)) return useAb(1);
+    if (A[0].can(p) && (lv >= 2 || Math.random() < 0.6)) return useAb(0);
   }
   // 探検家：財宝を先に使い、コインがあれば発掘調査
   if (p.heroId === 'explorer') {
@@ -2098,7 +2105,7 @@ function panelHTML(p, pos = '') {
   if (p.nextAtkPending && active) extra.push(`<span class="rage">⚔次の攻撃+${p.nextAtkPending}</span>`);
   if (p.investNext) extra.push(`<span class="coin">📈投資 +${p.investNext}</span>`);
   if (p.heroId === 'golem' && p.blockedAccum) extra.push(`<span class="mana">🛡防御計 ${p.blockedAccum}</span>`);
-  if (p.heroId === 'pirate') { extra.push(`<span class="abyss">💀亡者 <b>${graveZombies(p).length}</b></span>`); extra.push(`<span class="coin">💰財宝 <b>${flatCards(p.discard).filter(c => D(c).treasure).length}</b></span>`); if (p.anchor && active) extra.push(`<span class="mana"><b>⚓錨上げ中</b></span>`); }
+  if (p.heroId === 'pirate') { extra.push(`<span class="abyss">💀亡者 <b>${graveZombies(p).length}</b></span>`); }
   if (p.heroId === 'knight') { extra.push(`<span class="holy">${p.mounted ? '🐴騎乗中' : '<span style="color:#ff8a8a">落馬中</span>'}</span>`); if (p.oath) extra.push(`<span class="holy"><b>📜${OATHS[p.oath].name}</b></span>`); }
   if (p.chianti) extra.push(`<span class="heal">🍷相手の攻撃-${p.chianti}</span>`);
   if (p.defLimit) extra.push(`<span class="rage">🤺防御は1枚まで</span>`);
