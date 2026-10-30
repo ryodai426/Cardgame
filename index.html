@@ -584,7 +584,7 @@ const CARDS = {
       const s = await choose({ who: x.p, title: 'スフィンクスの謎：手札に加える1枚', cards: top, min: 1, max: 1, ai: 'best' }); s.forEach(c => { removeFrom(x.p.deck, c); x.p.hand.push(c); }); render(); } },
 
   // ---- 恐竜使いレックス（召喚した恐竜は場に残る） ----
-  raptor: { hero: 'dino', name: 'ラプトル', type: 'summon', cost: 2, def: 1, dc: 0, price: 2, art: '🦖', dino: { hp: 3, atk: 3, acost: 2 }, text: '【召喚】恐竜 ❤3 ⚔3 攻撃💧2' },
+  raptor: { hero: 'dino', name: 'ラプトル', type: 'summon', cost: 2, def: 1, dc: 0, price: 2, art: '🦖', dino: { hp: 3, atk: 2, acost: 2 }, text: '【召喚】恐竜 ❤3 ⚔2 攻撃💧2' },
   compy: { hero: 'dino', name: 'コンプソグナトゥス', type: 'summon', cost: 1, def: 1, dc: 0, price: 2, art: '🦎', dino: { hp: 2, atk: 2, acost: 1 }, text: '【召喚】恐竜 ❤2 ⚔2 攻撃💧1' },
   ptera: { hero: 'dino', name: 'プテラノドン', type: 'summon', cost: 2, def: 1, dc: 0, price: 2, art: '🦅', dino: { hp: 2, atk: 2, acost: 3, fly: true }, text: '【召喚】恐竜 ❤2 ⚔2 攻撃💧3\n飛行：攻撃は防御不能' },
   hatch: { hero: 'dino', needDino: true, name: '卵の孵化', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🥚', text: '【使用時】自分の恐竜1体のHP+2・ATK+1',
@@ -930,9 +930,9 @@ Object.assign(HEROES, {
         const c = s[0]; p.used.a0 = 1; p.coins -= recallCost(c); removeFrom(p.weathered, c); removeFrom(G.trash, c);
         c.costDown = (c.costDown || 0) + 1; p.hand.push(c); log(`「${D(c).name}」が冥府より帰還した（マナコスト-1）`, 'coin'); render();
       } }] },
-  dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 14, diff: '★★★', sig: 'raptor',
+  dino: { name: '恐竜使いレックス', short: 'レックス', title: '太古の獣を従える者', art: '🦕', color: '#c0703a', hp: 18, diff: '★★★', sig: 'raptor',
     pool: ['trike', 'stego', 'brachio', 'trex', 'huntcall', 'fossil', 'ankylo', 'spino', 'wakeroar'], draft: ['raptor', 'compy', 'ptera', 'hatch'],
-    passive: '【突然変異】餌やりした恐竜に、5種類（顎・感覚・共生・俊敏・翼）から3つ提示された能力を1つ付ける（1体1つまで）。【群れの狩り】恐竜が攻撃すると、このターンの以降の恐竜の攻撃コスト-1。恐竜は場に残り（最大2体）、相手は恐竜も攻撃対象に選べる。',
+    passive: '【突然変異】餌やりした恐竜に、5種類（顎・感覚・共生・俊敏・翼）から3つ提示された能力を1つ付ける（1体1つまで）。【恐竜】召喚した恐竜は場に残り（最大2体）、相手は恐竜も攻撃対象に選べる。',
     style: '召喚した恐竜は使っても場に残る。恐竜を並べ、マナを払って次々に襲わせる。',
     actives: [{ name: '餌やり', cost: '手札1枚', text: '手札1枚を捨て、恐竜1体のHP+2。このターン恐竜の攻撃コスト-1。さらにその恐竜が【突然変異】する（1ターン1回）',
       can: p => p.field.length > 0 && p.hand.length > 0 && !p.used.a0,
@@ -1237,8 +1237,6 @@ async function dinoAttack(p, dn) {
   if (dn.muts.includes('swift') && !dn.swiftUsed) dn.swiftUsed = true; else dn.exhausted = true;
   if (dn.muts.includes('symbio')) await heal(p, 2);
   await resolveAttack({ p, o: opp(p), card: dn.card, atk: dn.atk, dmg: 0, dino: dn });
-  // 群れの狩り：恐竜が攻撃すると、このターンの恐竜の攻撃コスト-1（1ターンに1回だけ）
-  if (p.heroId === 'dino' && !p.used.pack) { p.used.pack = 1; p.dinoDiscount++; }
 }
 function canPlay(p, c) {
   const d = D(c);
