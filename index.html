@@ -694,8 +694,8 @@ const CARDS = {
   bilge: { hero: 'pirate', name: '船底の大穴', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🕳️', text: '【使用時】【沈没】3', play: async x => { await sink(x.p, 3); } },
   deckhand: { hero: 'pirate', undead: true, name: '溺れた水夫', type: 'attack', cost: 1, atk: 1, def: 1, dc: 0, price: 2, art: '💀', text: '【捨て札から】ATK+2',
     play: async x => { if (x.grave) x.atk += 2; } },
-  doubloon: { hero: 'pirate', treasure: true, name: '呪いの金貨', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🪙', text: '【使用時】コイン+1\n【沈んだ時】コイン+2',
-    play: async x => gainCoins(x.p, 1), sunk: async x => gainCoins(x.p, 2) },
+  doubloon: { hero: 'pirate', treasure: true, name: '呪いの金貨', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🪙', text: '【使用時】コイン+2\n【沈んだ時】コイン+3。1枚引く',
+    play: async x => gainCoins(x.p, 2), sunk: async x => { gainCoins(x.p, 3); await draw(x.p, 1); } },
   gunner: { hero: 'pirate', undead: true, name: '亡者の砲手', type: 'attack', cost: 2, atk: 2, def: 1, dc: 0, price: 4, art: '💣', text: '【捨て札から】ATK+3・防御不能',
     graveUnblock: true, play: async x => { if (x.grave) x.atk += 3; } },
   boarders: { hero: 'pirate', undead: true, name: '亡者の斬り込み隊', type: 'attack', cost: 3, atk: 3, def: 2, dc: 0, price: 5, art: '☠️', text: '【捨て札から】ATK+4。ヒット時 コイン+2',
@@ -710,11 +710,10 @@ const CARDS = {
     play: async x => { if (x.grave) x.atk += 4; }, hit: async x => { if (x.grave) await forceDiscard(x.p, x.o, 1); } },
   floater: { hero: 'pirate', undead: true, rise: true, name: '浮かび上がる水夫', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🧟', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【防御時】【沈没】2',
     sunk: async x => autoRise(x.p, x.card), defend: async x => { await sink(x.p, 2); } },
-  chainzombie: { hero: 'pirate', undead: true, rise: true, name: '錨鎖の亡者', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '⛓️', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【ヒット時】【沈没】1（仲間を海に引きずり込む）',
+  chainzombie: { hero: 'pirate', undead: true, rise: true, name: '錨鎖の亡者', type: 'attack', cost: 2, atk: 2, def: 2, dc: 0, price: 3, art: '⛓️', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【ヒット時】【沈没】1（仲間を海に引きずり込む）',
     sunk: async x => autoRise(x.p, x.card), hit: async x => { await sink(x.p, 1); } },
   bosun: { hero: 'pirate', undead: true, rise: true, name: '亡霊船の甲板長', type: 'attack', cost: 3, atk: 3, def: 3, dc: 0, price: 5, art: '🏴‍☠️', text: '【沈んだ時】自動で浮かび上がり攻撃（マナ不要・相手のターンでも）\n【防御時】【沈没】3',
     sunk: async x => autoRise(x.p, x.card), defend: async x => { await sink(x.p, 3); } },
-  anchorblow: { hero: 'pirate', name: '錨の一撃', type: 'attack', cost: 2, atk: 3, def: 3, dc: 0, price: 4, art: '⚓', text: '【防御時】【沈没】2', defend: async x => { await sink(x.p, 2); } },
 
   // ---- 白虎の侍シグレ（白虎刀は手札に入らない専用武器） ----
   byakko: { hero: 'samurai', name: '白虎刀', type: 'attack', cost: 2, atk: 3, def: 0, dc: 0, price: 0, art: '🗡️', text: 'シグレの愛刀。手札には入らない' },
@@ -961,7 +960,7 @@ Object.assign(HEROES, {
 });
 Object.assign(HEROES, {
   pirate: { name: '深海の亡霊船長 ヴァンデル', short: 'ヴァンデル', title: '呪われた幽霊船の主', art: '🏴‍☠️', color: '#2fa39a', hp: 18, diff: '★★★', sig: 'cutlass',
-    pool: ['gunner', 'boarders', 'maelstrom', 'locker', 'kraken', 'ghostship', 'anchorblow', 'bosun', 'chainzombie'], draft: ['cutlass', 'bilge', 'doubloon', 'floater'],
+    pool: ['gunner', 'boarders', 'maelstrom', 'locker', 'kraken', 'ghostship', 'bosun', 'chainzombie', 'doubloon'], draft: ['cutlass', 'bilge', 'deckhand', 'floater'],
     passive: '【幽霊船】1ターンに1回、捨て札の【亡者】カードを「釣り上げ」で使える（使用後は山札の一番下へ戻る）。【浮上】浮かび上がる水夫・錨鎖の亡者・亡霊船の甲板長は、山札から捨て札に沈むと（相手のターンでも）自動で浮かび上がって攻撃する。',
     style: '自分の山札を捨て札に【沈没】させ、亡者を釣り上げたり浮かび上がらせたりして襲わせるヴィラン。守るたびに沈む亡者が反撃する。',
     actives: [
@@ -1154,9 +1153,13 @@ async function autoRise(p, c) {
   await resolveAttack({ p, o: opp(p), card: c, atk: D(c).atk, dmg: 0, grave: true, auto: true });
   if (st) G.stage = st;
 }
-// 【沈没】自分の山札の上から捨て札へ（山札が尽きたら止まる。シャッフルはしない）
+// 【沈没】自分の山札の上から捨て札へ。山札が足りなければ、先に捨て札を混ぜて山札に戻してから沈める
 async function sink(p, n) {
   const out = [];
+  if (p.deck.length < n && p.discard.length) {
+    p.deck = shuffle([...p.deck, ...flatCards(p.discard)]); p.discard = [];
+    log(`${pname(p)}の山札が足りない…捨て札を混ぜて山札に戻した（${p.deck.length}枚）`, 'sys');
+  }
   for (let i = 0; i < n && p.deck.length; i++) { const c = p.deck.pop(); p.discard.push(c); out.push(c); log(`${pname(p)}の「${D(c).name}」が捨て札に沈んだ`, 'trash'); }
   render();
   for (const c of out) if (D(c).sunk) { log(`【沈んだ時】「${D(c).name}」`, 'coin'); await D(c).sunk({ p, o: opp(p), card: c }); }
@@ -1529,7 +1532,7 @@ function showRules(detail = false) {
   <p><b>自傷</b>（イグニス）：使うと自分もダメージを受けるカード。自傷のたびに灼熱が溜まり、灼熱3で「炎の化身」を無料で発動できる（そのターンの自傷は相手が受ける）。</p>
   <p><b>エルフ</b>（リーフィア）：【エルフ】が付いた低コストカード。使った枚数に応じてドローや攻撃力が増える。</p>
   <p><b>【風化】</b>（ネフェルカ）：使用すると破棄される（防御に使った時は残る）。「冥府の帰還」（コイン2）で手札に呼び戻すと、そのカードのマナコストが1下がる。</p>
-  <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>浮かび上がる水夫・錨鎖の亡者・亡霊船の甲板長</b>は、山札から沈むと相手のターンでも自動で浮かび上がって攻撃する（攻撃後は山札の一番下へ）。</p>
+  <p><b>【沈没】</b>（ヴァンデル）：自分の山札の上から指定枚数を捨て札に送る（山札が足りない時は、先に捨て札を混ぜて山札に戻してから）。<b>【沈んだ時】</b>の効果はこの時に発動。<b>【亡者】</b>は「釣り上げ」（1ターン1回）で捨て札から使え、<b>【捨て札から】</b>の効果で強くなる（使用後は山札の一番下へ）。<b>浮かび上がる水夫・錨鎖の亡者・亡霊船の甲板長</b>は、山札から沈むと相手のターンでも自動で浮かび上がって攻撃する（攻撃後は山札の一番下へ）。</p>
   <p><b>【魅了X】</b>（朧）：相手はライフをX失う。手札のカードでは防御できない代わりに、<b>手札1枚を捨てる／💧マナ2／🪙コイン2</b>のどれか（おひねり）で無力化できる。コインのおひねりは花魁がもらう。「傾城」中は代償が2倍。</p>
   <p><b>バンドとオーディエンス</b>（レイジ）：ドラマーとベーシストは最初から場にいて倒されない。タップしてマナを払うと攻撃（各1ターン1回）。【観客】カードでオーディエンスを集めるとレベルアップ（4人でLv2／8人でLv3／12人でLv4）し、メンバーが強くなる。</p>
   <p><b>【発見】</b>（ロウ）：5種類の財宝（黄金の偶像：コイン+2／古代の盾：次に受ける攻撃ATK-2／古地図：1枚引く／聖杯：HP2回復／太陽の護符：このターンの攻撃ATK+1）から3つが提示され、1つを手札に加える。財宝はマナ0で使えるが、そのターン中に使わないと消える。</p>
