@@ -52,6 +52,7 @@ button.danger{background:linear-gradient(#8a2c2c,#561616);color:#ffd8d8;border-c
 .dino.tired{opacity:.6}
 .dmut{font-size:12px;line-height:1.1;letter-spacing:-1px}
 .dino.weapon{border-color:#c9d6e8;background:linear-gradient(#2a3242,#11141c)}
+.dino.pizza{border-color:#e05a47;background:linear-gradient(#4a2a1a,#1c120a)}
 .dino.band{border-color:#7d6bff;background:linear-gradient(#2a2346,#120f1d)}
 .dart{font-size:32px;line-height:1.2}
 .dname{font-weight:bold;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:72px}
@@ -791,6 +792,33 @@ const CARDS = {
   harvest: { hero: 'alien', echo: 2, name: 'エネルギー吸収', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '🔋', text: 'マナ+1\n【エコー2】', play: async x => gainMana(x.p, 1) },
   regen: { hero: 'alien', echo: 4, heal: true, name: '細胞再生', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🧬', text: 'HP1回復\n【エコー4】', play: async x => heal(x.p, 1) },
   crop: { hero: 'alien', name: 'ミステリーサークル', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🌾', text: '【使用時】このターン使ったカードの枚数を+2として数える', play: async x => { x.p.cardsThisTurn += 2; log('ミステリーサークル：使用枚数+2'); } },
+  // ---- 白銀の騎士 レオン（騎乗と誓い） ----
+  lance: { hero: 'knight', name: '騎槍突撃', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 2, art: '🏇', text: '【使用時】騎乗中ならATK+3', play: async x => { if (x.p.mounted) x.atk += 3; } },
+  shieldbash: { hero: 'knight', name: '盾打ち', type: 'attack', cost: 1, atk: 2, def: 3, dc: 0, price: 2, art: '🛡️', text: '堅実な一撃' },
+  remount: { hero: 'knight', name: '乗り換え', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🐎', text: '【使用時】落馬していれば再騎乗する。騎乗中なら1枚引く',
+    play: async x => { if (!x.p.mounted) mount(x.p); else await draw(x.p, 1); } },
+  banner: { hero: 'knight', name: '軍旗', type: 'skill', cost: 1, def: 2, dc: 0, price: 2, art: '🚩', text: '【使用時】このターンの攻撃全てATK+1。1枚引く', play: async x => { x.p.turnAtk += 1; await draw(x.p, 1); } },
+  greatshield: { hero: 'knight', name: '大盾構え', type: 'attack', cost: 1, atk: 1, def: 5, dc: 0, price: 3, art: '🛡️', text: '【防御時】次の自分のターン最初の攻撃ATK+2', defend: async x => { x.p.storedAtk += 2; } },
+  duel: { hero: 'knight', name: '名誉の決闘', type: 'skill', cost: 1, def: 1, dc: 0, price: 4, art: '🤺', text: '【使用時】このターン、相手は攻撃を手札1枚でしか防御できない。1枚引く',
+    play: async x => { x.o.defLimit = 1; log('決闘を申し込んだ！ 相手は1枚でしか防御できない'); await draw(x.p, 1); } },
+  charge: { hero: 'knight', name: '騎馬突撃', type: 'attack', cost: 4, atk: 6, def: 1, dc: 0, price: 6, art: '🐴', text: '【使用時】騎乗中なら防御不能', play: async x => { if (x.p.mounted) x.pierce = true; } },
+  oathsword: { hero: 'knight', name: '誓いの剣', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '⚔️', text: '【使用時】正々堂々の誓いを立てていればATK+3', play: async x => { if (x.p.oath === 'fair') x.atk += 3; } },
+  silverarmor: { hero: 'knight', name: '白銀の鎧', type: 'skill', cost: 1, def: 4, dc: 0, price: 3, art: '🥋', text: '【使用時】HP2回復\n【防御時】HP1回復', heal: true, play: async x => heal(x.p, 2), defend: async x => heal(x.p, 1) },
+  joust: { hero: 'knight', name: '馬上槍試合', type: 'attack', cost: 3, atk: 4, def: 2, dc: 0, price: 5, art: '🎠', text: '【使用時】騎乗中ならATK+2。【ヒット時】コイン+2', play: async x => { if (x.p.mounted) x.atk += 2; }, hit: async x => gainCoins(x.p, 2) },
+
+  // ---- 窯焼きの巨匠 マエストロ（トッピング → 焼き上げ → ピッツァ投げ） ----
+  pizza: { hero: 'maestro', name: 'ピッツァ', type: 'attack', cost: 1, atk: 3, def: 0, dc: 0, price: 0, art: '🍕', text: '焼きたてのピッツァ' },
+  tomato: { hero: 'maestro', topping: { atk: 2 }, name: 'トマトソース', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🍅', text: '【トッピング】ATK+2' },
+  mozza: { hero: 'maestro', topping: { atk: 1, mana: 1 }, name: 'モッツァレラ', type: 'skill', cost: 1, def: 2, dc: 0, price: 2, art: '🧀', text: '【トッピング】ATK+1・当たると相手のマナ-1' },
+  salami: { hero: 'maestro', topping: { dmg: 3 }, name: 'ペペロニ', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🌶️', text: '【トッピング】当たると追加で3ダメージ' },
+  basil: { hero: 'maestro', topping: { heal: 2 }, name: 'バジル', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🌿', text: '【トッピング】当たると自分のHP2回復' },
+  porcini: { hero: 'maestro', topping: { atk: 4 }, name: 'ポルチーニ', type: 'skill', cost: 2, def: 1, dc: 0, price: 4, art: '🍄', text: '【トッピング】ATK+4' },
+  rucola: { hero: 'maestro', topping: { draw: 1 }, name: 'ルッコラ', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🥬', text: '【トッピング】当たると1枚引く' },
+  anchovy: { hero: 'maestro', topping: { pierce: true }, name: 'アンチョビ', type: 'skill', cost: 1, def: 1, dc: 0, price: 5, art: '🐟', text: '【トッピング】ピッツァが防御不能になる' },
+  chianti: { hero: 'maestro', heal: true, name: 'キャンティ・クラシコ', type: 'skill', cost: 1, def: 2, dc: 0, price: 4, art: '🍷', text: '【使用時】HP3回復。次の相手のターン、相手の攻撃全てATK-1',
+    play: async x => { await heal(x.p, 3); x.p.chianti = 1; log('キャンティ・クラシコで乾杯（次の相手の攻撃ATK-1）', 'heal'); } },
+  peel: { hero: 'maestro', name: 'ピザピール', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 4, art: '🪵', text: '【使用時】ピッツァが焼き上がっていればATK+2', play: async x => { if (x.p.pizza.ready) x.atk += 2; } },
+  tiramisu: { hero: 'maestro', heal: true, name: 'ティラミス', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '🍰', text: '【使用時】HP2回復。1枚引く', play: async x => { await heal(x.p, 2); await draw(x.p, 1); } },
   sayauke: { hero: 'samurai', name: '鞘受け', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 3, art: '🥢', text: '【防御時】白虎刀のATK+1（ずっと続く）', defend: async x => sharpen(x.p, 1) },
 };
 const NEUTRAL = ['sharp', 'heavy', 'thief', 'ironshield', 'thorn', 'incinerate', 'crystal', 'breath', 'counter', 'mikiri', 'goldbag', 'hammer', 'roar', 'potion', 'axe', 'reveal'];
@@ -1040,6 +1068,56 @@ Object.assign(HEROES, {
     actives: [{ name: '共鳴増幅', cost: 'コイン5', text: 'このターン、エコーの上限Xが2倍になる（1ターン1回）', can: p => p.coins >= 5 && p.echoMul < 2,
       use: async p => { p.coins -= 5; p.echoMul = 2; log('共鳴増幅！ このターンのエコー上限2倍', 'info'); fx(p.idx, '共鳴増幅!', 'info'); render(); } }] },
 });
+Object.assign(HEROES, {
+  knight: { name: '白銀の騎士 レオン', short: 'レオン', title: '誓いを貫く王国の盾', art: '🏇', color: '#6a8cc7', hp: 19, diff: '★☆☆', sig: 'lance',
+    pool: ['greatshield', 'duel', 'charge', 'oathsword', 'silverarmor', 'joust', 'remount', 'banner'], draft: ['lance', 'shieldbash', 'remount', 'banner'],
+    passive: '【騎乗】最初は馬に乗っている。騎乗中は全ての攻撃ATK+2。一度に5以上のダメージを受けると落馬する。【誓い】ターン開始時に誓いを立てられる（破れない）。守りの誓い：このターン攻撃できないが、次の相手の攻撃全てATK-2。正々堂々の誓い：このターン威圧しないが、攻撃全てATK+2。',
+    style: '馬上からの重い突撃が武器。毎ターンの誓いで攻めと守りを切り替える、王道の騎士。',
+    actives: [{ name: '騎乗', cost: 'マナ2', text: '落馬している時、馬に乗り直す（1ターン1回）', can: p => !p.mounted && p.mana >= 2 && !p.used.a0,
+      use: async p => { p.used.a0 = 1; p.mana -= 2; mount(p); } }] },
+  maestro: { name: '窯焼きの巨匠 マエストロ', short: 'マエストロ', title: 'ピッツァを投げるナポリの職人', art: '👨‍🍳', color: '#e05a47', hp: 21, diff: '★★☆', sig: 'tomato',
+    pool: ['porcini', 'rucola', 'anchovy', 'chianti', 'peel', 'tiramisu', 'mozza', 'salami'], draft: ['tomato', 'mozza', 'salami', 'basil'],
+    passive: '【ピッツァ】場にピッツァ生地がある。【トッピング】カードで具を乗せる（4つまで）と、次の自分のターン開始時に焼き上がる。焼き上がったら「ピッツァ投げ」（💧1・ATK3＋具）で全ての具の効果をまとめて叩き込む。焼き上がってから1ターン投げないと焦げる（ATK-2）。',
+    style: '具を選んで乗せ、窯で焼き、投げつける。準備に時間がかかるが、決まれば一撃が重い。',
+    actives: [
+      { name: 'ピッツァ投げ', cost: 'マナ1', text: '焼き上がったピッツァを投げる', can: p => p.pizza.ready && p.mana >= 1, use: async p => throwPizza(p) },
+      { name: '全力の窯焚き', cost: 'HP2', text: 'HPを2失い、窯のピッツァをこのターン中に焼き上げる（1ターン1回）', can: p => !p.pizza.ready && p.pizza.tops.length > 0 && p.hp > 2 && !p.used.a1,
+        use: async p => { p.used.a1 = 1; await loseHp(p, 2, '全力の窯焚き'); p.pizza.ready = true; log('汗だくで窯を焚いた！ ピッツァが焼き上がった', 'coin'); fx(p.idx, '🍕焼き上がり!', 'coin'); render(); } }] },
+});
+// ---- 騎士 ----
+function mount(p) { p.mounted = true; log(`${pname(p)}は馬に乗った！（騎乗中：攻撃ATK+2）`, 'sys'); fx(p.idx, '🐴騎乗!', 'info'); render(); }
+const OATHS = { guard: { name: '守りの誓い', text: 'このターン攻撃できない。次の相手の攻撃全てATK-2' }, fair: { name: '正々堂々の誓い', text: 'このターン威圧しない。攻撃全てATK+2' } };
+async function chooseOath(p) {
+  const opts = [{ label: '🛡️ 守りの誓い：このターン攻撃できない／次の相手の攻撃全てATK-2', value: 'guard' }, { label: '⚔️ 正々堂々の誓い：このターン威圧しない／攻撃全てATK+2', value: 'fair' }, { label: '誓わない', value: null }];
+  const v = await chooseOption({ who: p, title: '📜 今日の誓い', sub: '立てた誓いはこのターン中、破ることができない', options: opts,
+    aiFn: () => p.hand.some(c => D(c).type === 'attack' && !G.seals.has(c.uid) && ccost(p, c) <= p.mana) ? 'fair' : 'guard' });
+  p.oath = v; if (v) { log(`${pname(p)}は「${OATHS[v].name}」を立てた`, 'holy'); fx(p.idx, OATHS[v].name, 'holy'); }
+  render();
+}
+// ---- マエストロ ----
+const MAX_TOP = 4, PIZZA_BASE = 3;
+function syncPizza(p) {
+  const pz = p.pizza, t = pz.tops.map(k => CARDS[k].topping);
+  const atk = PIZZA_BASE + t.reduce((a, b) => a + (b.atk || 0), 0) - (pz.burnt ? 2 : 0);
+  const fx_ = [];
+  const sum = k => t.reduce((a, b) => a + (b[k] || 0), 0);
+  if (sum('mana')) fx_.push(`当たると相手のマナ-${sum('mana')}`); if (sum('dmg')) fx_.push(`当たると追加${sum('dmg')}ダメージ`);
+  if (sum('heal')) fx_.push(`当たるとHP${sum('heal')}回復`); if (sum('draw')) fx_.push(`当たると${sum('draw')}枚引く`); if (t.some(b => b.pierce)) fx_.push('防御不能');
+  pz.inst.fdef = { ...CARDS.pizza, atk: Math.max(0, atk), text: `${pz.tops.length ? pz.tops.map(k => CARDS[k].art).join('') : '具なし'}${pz.burnt ? '（焦げ）' : ''}\n${fx_.join('\n')}` };
+  return { atk: Math.max(0, atk), sum, pierce: t.some(b => b.pierce) };
+}
+async function throwPizza(p) {
+  const pz = p.pizza, info = syncPizza(p); p.mana -= 1;
+  log(`🍕 ピッツァ投げ！（${pz.tops.map(k => CARDS[k].name).join('・') || '具なし'}${pz.burnt ? '・焦げ' : ''}）`, 'coin');
+  await resolveAttack({ p, o: opp(p), card: pz.inst, atk: info.atk, dmg: 0, unit: true, pizza: info, pierce: info.pierce });
+}
+function pizzaHTML(p, main) {
+  const pz = p.pizza, info = syncPizza(p), can = main && pz.ready && p.mana >= 1;
+  const st = pz.burnt ? '焦げた…' : pz.ready ? '焼き上がり！' : pz.tops.length ? '窯で焼成中' : '生地';
+  return `<div class="dino pizza ${can ? 'ready' : ''} ${pz.ready ? '' : 'tired'}" data-cid="F${pz.inst.uid}" onclick="useActive(${p.idx},0)" title="ピッツァ${can ? '：タップで投げる' : ''}">
+    <div class="dtag">${pz.tops.length}/${MAX_TOP}</div><div class="dart">🍕</div><div class="dname">${st}</div>
+    <div class="dst"><span class="atk">⚔${info.atk}</span> <span class="mana">💧1</span></div><div class="dmut">${pz.tops.map(k => CARDS[k].art).join('') || '　'}</div></div>`;
+}
 const TREASURES = ['t_idol', 't_aegis', 't_map', 't_grail', 't_amulet'];
 async function discover(p, n = 1) {
   for (let i = 0; i < n; i++) {
@@ -1057,7 +1135,7 @@ async function stealCoins(p, o, n) {
   render();
 }
 const recallCost = c => Math.max(2, CARDS[c.id].cost + 1);
-const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai', 'oiran', 'rocker', 'explorer', 'alien'];
+const HERO_ORDER = ['allen', 'garud', 'carmilla', 'merla', 'chuta', 'kuru', 'golem', 'angel', 'mech', 'wolf', 'elf', 'pharaoh', 'dino', 'pyro', 'pirate', 'samurai', 'oiran', 'rocker', 'explorer', 'alien', 'knight', 'maestro'];
 // ---- 海賊：沈没・亡者 ----
 const ccost = (p, c) => Math.max(0, D(c).cost - (c.costDown || 0));
 const graveCost = (p, c) => Math.max(0, ccost(p, c) - (p.anchor ? 2 : 0));
@@ -1166,6 +1244,8 @@ function canPlay(p, c) {
   const d = D(c);
   if (d.type === 'curse' || G.seals.has(c.uid) || ccost(p, c) > p.mana) return false;
   if (d.type === 'summon' && p.field.length >= MAX_FIELD) return false;
+  if (p.oath === 'guard' && d.type === 'attack') return false;
+  if (d.topping && (!p.pizza || p.pizza.ready || p.pizza.tops.length >= MAX_TOP)) return false;
   if (d.needDino && !p.field.length) return false;
   return true;
 }
@@ -1222,7 +1302,9 @@ async function damage(t, n, src = '', pierce = false) {
     if (n <= 0) { render(); return 0; }
   }
   t.hp -= n; fx(t.idx, `-${n}`, 'dmg');
-  log(`${pname(t)}に${n}ダメージ${src ? '（' + src + '）' : ''}`, 'dmg'); render();
+  log(`${pname(t)}に${n}ダメージ${src ? '（' + src + '）' : ''}`, 'dmg');
+  if (t.mounted && n >= 5 && t.hp > 0) { t.mounted = false; log(`${pname(t)}は落馬した！`, 'dmg'); fx(t.idx, '落馬!', 'dmg'); }
+  render();
   if (t.hp <= 0) { t.hp = 0; G.winner = 1 - t.idx; throw new GameOver(); }
   return n;
 }
@@ -1426,6 +1508,8 @@ function showRules() {
   <p><b>バンドとオーディエンス</b>（レイジ）：ドラマーとベーシストは最初から場にいて倒されない。タップしてマナを払うと攻撃（各1ターン1回）。【観客】カードでオーディエンスを集めるとレベルアップ（4人でLv2／8人でLv3／12人でLv4）し、メンバーが強くなる。</p>
   <p><b>【発見】</b>（ロウ）：5種類の財宝（黄金の偶像：コイン+2／古代の盾：次に受ける攻撃ATK-2／古地図：1枚引く／聖杯：HP2回復／太陽の護符：このターンの攻撃ATK+1）から3つが提示され、1つを手札に加える。財宝はマナ0で使えるが、そのターン中に使わないと消える。</p>
   <p><b>【エコーX】</b>（ゼノ）：そのカードより前にこのターン使ったカードの枚数＋1回、効果をくり返す（最大X回）。「共鳴増幅」中は上限Xが2倍。</p>
+  <p><b>騎乗と誓い</b>（レオン）：騎乗中は攻撃ATK+2、一度に5以上のダメージで落馬（能力「騎乗」で乗り直す）。ターン開始時に誓いを立てられ、このターン中は破れない（守りの誓い：攻撃できないが次の相手の攻撃ATK-2／正々堂々の誓い：威圧しないが攻撃ATK+2）。</p>
+  <p><b>ピッツァ</b>（マエストロ）：【トッピング】カードで具を乗せ（4つまで）、次の自分のターン開始時に焼き上がる（能力「全力の窯焚き」でHP2を払えばすぐ焼ける）。焼き上がったらタップで投げる（💧1・ATK3＋具）。焼き上がってから1ターン投げないと焦げてATK-2。</p>
   <p><b>白虎刀</b>（シグレ）：手札に入らない専用武器。場の白虎刀をタップ（または能力ボタン）で、💧2を払って攻撃（基本1ターン1回）。砥石・玉鋼でATKがずっと上がり、二の太刀などで振れる回数が増える。</p>
   <p><b>召喚と恐竜</b>（レックス）：召喚カードを使うと恐竜が場に出て、そのまま残る（最大2体）。場の恐竜をクリックし、攻撃コスト💧を払うと攻撃（1ターン1回・召喚したターンは待機）。相手は攻撃するとき、ヒーローか恐竜を対象に選べる（【守護】の恐竜がいればそれを狙う）。HPが0になった恐竜はカードとして捨て札へ。</p>
   <p><b>【突然変異】</b>（レックス）：餌やりした恐竜に、3つ提示された能力から1つを付ける（発達した顎：ATK+1／鋭い感覚：ヒットで1枚引く／共生：攻撃するたびHP2回復／俊敏：1ターン2回攻撃／翼：防御不能）。1体につき1つまで。</p>
@@ -1475,7 +1559,8 @@ function newPlayer(idx, heroId) {
     abyss: 0, rage: 0, rageNow: 0, storedAtk: 0, blockedAccum: 0, investNext: 0, nextAtkPending: 0, used: {}, attacksThisTurn: 0, skillsThisTurn: 0, turnAtk: 0, heroDeck: [], heroRow: [],
     field: [], dinoDiscount: 0, dinoAtk: 0, elvesThisTurn: 0, elfBless: false, wolfForm: false, burnCount: 0, inferno: false, weathered: [],
     anchor: false, wAtk: 3, wSwings: 1, wUsed: 0, wTurnAtk: 0, wCoinBonus: 0, wDisc: 0, wPierce: false, wInst: null,
-    keisei: false, charmBonus: 0, aud: 0, band: [], bandAtk: 0, ward: 0, relicsUsed: 0, lore: false, cardsThisTurn: 0, echoMul: 1 };
+    keisei: false, charmBonus: 0, aud: 0, band: [], bandAtk: 0, ward: 0, relicsUsed: 0, lore: false, cardsThisTurn: 0, echoMul: 1,
+    mounted: false, oath: null, defLimit: 0, pizza: null, chianti: 0 };
 }
 function startGame(h0, h1, cpus = [null, null]) {
   UID = 1; FUSED = {}; SCREEN = 'game'; M = null; renderModal();
@@ -1487,6 +1572,8 @@ function startGame(h0, h1, cpus = [null, null]) {
     p.heroDeck = shuffle(HEROES[h].pool.flatMap(id => [mk(id), mk(id)]));
     p.heroRow = p.heroDeck.splice(-3);
     if (h === 'samurai') { p.wInst = { uid: UID++, id: 'byakko' }; FUSED[p.wInst.uid] = p.wInst; syncWeapon(p); }
+    if (h === 'knight') p.mounted = true;
+    if (h === 'maestro') { p.pizza = { tops: [], ready: false, burnt: false, inst: { uid: UID++, id: 'pizza' } }; FUSED[p.pizza.inst.uid] = p.pizza.inst; syncPizza(p); }
     if (h === 'rocker') { p.band = ['drummer', 'bassist'].map(id => ({ uid: UID++, id, used: 0, max: 1 })); p.band.forEach((m, k) => { FUSED[m.uid] = m; syncMember(p, k); }); }
     G.players.push(p);
   });
@@ -1508,7 +1595,8 @@ async function startTurn() {
   p.rageNow = Math.min(RAGE_CAP, p.rage); p.rage = 0;
   p.dinoDiscount = 0; p.dinoAtk = 0; p.elvesThisTurn = 0; p.elfBless = false;
   p.anchor = false; p.wSwings = 1; p.wUsed = 0; p.wTurnAtk = 0; p.wCoinBonus = 0; p.wDisc = 0;
-  p.relicsUsed = 0; p.lore = false; p.cardsThisTurn = 0; p.echoMul = 1;
+  p.relicsUsed = 0; p.lore = false; p.cardsThisTurn = 0; p.echoMul = 1; p.oath = null; p.chianti = 0;
+  if (p.pizza) { const pz = p.pizza; if (pz.ready && !pz.burnt) { pz.burnt = true; log('ピッツァが焦げてしまった…（ATK-2）', 'dmg'); } else if (!pz.ready && pz.tops.length) { pz.ready = true; log('🍕 ピッツァが焼き上がった！', 'coin'); } }
   p.keisei = false; p.charmBonus = 0; p.bandAtk = 0; p.band.forEach(m => { m.used = 0; m.max = 1; });
   p.field.forEach(dn => { dn.exhausted = false; dn.swiftUsed = false; });
   if (p.shield) { log(`${pname(p)}の聖なる盾（${p.shield}）が消えた`, 'holy'); p.shield = 0; }
@@ -1526,7 +1614,8 @@ async function startTurn() {
   if (p.heroId === 'rocker' && rlv(p) >= 4) { log('伝説のライブ：1枚引く', 'sys'); await draw(p, 1); }
   G.phase = 'draft'; render();
   await draftStep(p);
-  G.phase = o.hand.some(c => D(c).type !== 'curse' && !G.seals.has(c.uid)) ? 'intimidate' : 'main';
+  if (p.heroId === 'knight') await chooseOath(p);
+  G.phase = p.oath !== 'fair' && o.hand.some(c => D(c).type !== 'curse' && !G.seals.has(c.uid)) ? 'intimidate' : 'main';
   render();
   if (isCPU(p)) await aiTurn(p);
 }
@@ -1567,6 +1656,8 @@ function handClick(pi, uid) {
   if (p.mana < ccost(p, c)) { toast('マナが足りない'); return; }
   if (d.type === 'summon' && p.field.length >= MAX_FIELD) { toast(`恐竜は${MAX_FIELD}体までしか並べられない`); return; }
   if (d.needDino && !p.field.length) { toast('場に恐竜がいない'); return; }
+  if (p.oath === 'guard' && d.type === 'attack') { toast('守りの誓いを立てたので、このターンは攻撃できない'); return; }
+  if (d.topping && !canPlay(p, c)) { toast(p.pizza && p.pizza.ready ? '焼き上がったピッツァには具を足せない（先に投げよう）' : `具は${MAX_TOP}つまで`); return; }
   run(() => playCard(p, c));
 }
 // grave=true：捨て札から使う（海賊の釣り上げ）。使用後は山札の一番下へ
@@ -1587,6 +1678,7 @@ async function playCard(p, c, grave = false) {
     log(`${pname(p)}は「${d.name}」を使用`); echoLog();
     render(); await sleep(250);
     if (d.play) for (let r = 0; r < reps; r++) await d.play({ p, o, card: c, grave });
+    if (d.topping && p.pizza) { p.pizza.tops.push(c.id); log(`ピッツァに「${d.name}」を乗せた（${p.pizza.tops.length}/${MAX_TOP}）`, 'coin'); fx(p.idx, `${d.art}トッピング`, 'coin'); }
     if (d.token) { p.relicsUsed++; if (p.lore) gainCoins(p, 1); }
     if (grave) p.deck.unshift(c); else if (d.token) {} else if (d.weather) weatherCard(p, c); else p.discard.push(c);
     p.skillsThisTurn++;
@@ -1601,7 +1693,8 @@ async function playCard(p, c, grave = false) {
 // a.dino があれば恐竜の攻撃（カードの使用時効果やヒーロー補正は乗らない）
 async function resolveAttack(a) {
   const { p, o, card } = a; const d = D(card); const dino = a.dino, wpn = a.weapon || a.unit;
-  if (wpn) a.atk += p.turnAtk + (a.weapon ? p.wTurnAtk : p.bandAtk);
+  if (wpn) a.atk += p.turnAtk + (a.weapon ? p.wTurnAtk : a.pizza ? 0 : p.bandAtk);
+  if (!dino && p.heroId === 'knight') { if (p.mounted) a.atk += 2; if (p.oath === 'fair') a.atk += 2; }
   else if (!dino) {
     const pending = p.nextAtkPending; p.nextAtkPending = 0;
     if (d.play) for (let r = 0; r < (a.reps || 1); r++) await d.play(a);
@@ -1620,6 +1713,8 @@ async function resolveAttack(a) {
   G.stage = { pi: p.idx, card, atk: a.atk, defs: [], def: 0, result: '', target: a.target };
   render(); await sleep(300);
   await stanceTrigger(o, 'declare', a);
+  if (o.oath === 'guard') { a.atk -= 2; log('守りの誓い：ATK-2', 'holy'); }
+  if (o.chianti) { a.atk -= o.chianti; log(`キャンティ・クラシコ：ATK-${o.chianti}`, 'holy'); }
   if (o.ward) { a.atk -= o.ward; log(`古代の盾：ATK-${o.ward}`, 'holy'); fx(o.idx, `🛡️-${o.ward}`, 'holy'); o.ward = 0; }
   a.atk = Math.max(0, a.atk); G.stage.atk = a.atk; render();
   let defs = [];
@@ -1639,6 +1734,7 @@ async function resolveAttack(a) {
     if (a.target) await damageDino(o, a.target, dmg, name); else await damage(o, dmg, name);
     if (p.heroId === 'carmilla') await heal(p, 1);
     if (a.weapon) { log('武士の誉れ', 'coin'); gainCoins(p, 1 + p.wCoinBonus); }
+    if (a.pizza) { const S = a.pizza.sum; if (S('mana')) { o.mana = Math.max(0, o.mana - S('mana')); log(`チーズで相手のマナ-${S('mana')}`); } if (S('dmg')) await damage(o, S('dmg'), 'ペペロニ'); if (S('heal')) await heal(p, S('heal')); if (S('draw')) await draw(p, S('draw')); }
     if (onHit) await onHit(a);
     if (dino && dino.muts && dino.muts.includes('sense')) { log(`${dino.name}の鋭い感覚：1枚引く`); await draw(p, 1); }
     await stanceTrigger(o, 'hit', a);
@@ -1647,6 +1743,8 @@ async function resolveAttack(a) {
     if (o.heroId === 'golem' && defs.length) await damage(p, 1, '鉄壁');
     if (a.atk > 0) await stanceTrigger(o, 'blocked', a);
   }
+  if (a.pizza) { p.pizza.tops = []; p.pizza.ready = false; p.pizza.burnt = false; syncPizza(p); }
+  o.defLimit = 0;
   render(); await sleep(250);
 }
 async function stanceTrigger(holder, when, a) {
@@ -1666,7 +1764,7 @@ async function defensePrompt(o, a) {
   return await choose({
     who: o, title: `🛡 防御しますか？`, ai: 'defend', a,
     sub: `${pname(a.p)}の「${a.dino ? a.dino.name : D(a.card).name}」<b style="color:#ff8a6a;font-size:16px">ATK ${a.atk}</b>　／　あなたのマナ 💧${o.mana}${o.shield ? `　聖なる盾✨${o.shield}` : ''}${a.target ? `<br>🎯 攻撃対象：<b>${a.target.art}${a.target.name}（❤${a.target.hp}）</b>` : ''}${o.heroId === 'wolf' && !fullMoon(o) ? '<br>🌑 新月：防御カード1枚につきDEF+1' : ''}<br>ここで使ったカードとマナは次の自分のターンに使えません。${stanceNote}${sealNote}`,
-    cards: o.hand, min: 0, max: MAX_DEF, disabled: elig,
+    cards: o.hand, min: 0, max: o.defLimit ? Math.min(MAX_DEF, o.defLimit) : MAX_DEF, disabled: elig,
     extra: c => G.seals.has(c.uid) ? unsealHTML(o, c) : (dcost(o, c) !== (D(c).dc || 0) ? `<div class="price" style="border-color:#6fc3ff;color:#6fc3ff">防御💧${dcost(o, c)}</div>` : ''),
     validate: s => msum(s) <= o.mana,
     summary: s => { const df = sum(s), m = msum(s); return `DEF合計 <span style="color:#7ac8ff">${df}</span>　消費マナ <span style="color:${m > o.mana ? '#f55' : '#6fc3ff'}">${m}/${o.mana}</span>　→ 被ダメージ <span style="color:#ff6a6a">${Math.max(0, a.atk - df)}</span>`; },
@@ -1747,7 +1845,7 @@ function aiDefend(p, a) {
   const keep = c => { const d = D(c); let v = d.type === 'attack' ? d.atk * 1.1 - d.cost * 0.2 : (d.price || 1) * 0.6; if (d.stance) v += lv === 3 ? 3 : 1; return v - d.def * 0.8; };
   const sorted = [...cand].sort((x, y) => keep(x) - keep(y));
   const sel = []; let m = p.mana, rem = a.atk;
-  const maxCards = Math.min(MAX_DEF, lethal ? 99 : 2);
+  const maxCards = Math.min(MAX_DEF, lethal ? 99 : 2, p.defLimit || 99);
   // 致死なら防御値の高い順に
   if (lethal) sorted.sort((x, y) => D(y).def - D(x).def);
   for (const c of sorted) {
@@ -1881,6 +1979,14 @@ async function aiAction(p, o, lv) {
     if (plain.length && echo.length) { await playCard(p, plain.sort((x, y) => ccost(p, x) - ccost(p, y))[0]); return true; }
     if (echo.length) { await playCard(p, echo.sort((x, y) => D(x).echo - D(y).echo || ccost(p, x) - ccost(p, y))[0]); return true; }
   }
+  // 騎士：落馬していたら乗り直す
+  if (p.heroId === 'knight' && A[0].can(p) && (lv >= 2 || Math.random() < 0.5) && p.mana >= 3) return useAb(0);
+  // マエストロ：焼けていれば投げる → 具が2つ以上なら窯焚き
+  if (p.heroId === 'maestro') {
+    const pz = p.pizza, toppable = playable().some(c => D(c).topping);
+    if (A[0].can(p) && (lv === 1 || pz.burnt || pz.tops.length >= 3 || !toppable || syncPizza(p).atk >= o.hp)) return useAb(0);
+    if (lv >= 2 && A[1].can(p) && p.hp > 8 && p.mana >= 1 && (pz.tops.length >= 3 || (pz.tops.length >= 2 && !playable().some(c => D(c).topping)))) return useAb(1);
+  }
   // 花魁：魅了を撃つ前に傾城
   if (p.heroId === 'oiran' && A[0].can(p) && (lv >= 2 || Math.random() < 0.5) && playable().filter(c => D(c).charm && ccost(p, c) <= p.mana).length >= (o.hand.length >= 2 ? 1 : 2)) return useAb(0);
   // 侍：白虎刀の強化 → 白虎刀で攻撃
@@ -1939,7 +2045,7 @@ function cardHTML(c, opt = {}) {
   return `<div class="card ${d.type} ${d.fused ? 'fusedc' : ''} ${d.token ? 'token' : ''} ${opt.cls || ''}" data-cid="${cid}" style="--hc:${hc}" ${opt.click ? `onclick="${opt.click}"` : ''}>
     ${d.type !== 'curse' ? `<div class="cost" ${c.costDown ? 'style="background:radial-gradient(circle at 35% 35%,#9dffb0,#1e8a3a)"' : ''}>${Math.max(0, d.cost - (c.costDown || 0))}</div>` : ''}
     <div class="cname">${d.name}</div><div class="art">${d.art}</div>
-    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.undead ? '・亡者' : ''}${d.treasure ? '・財宝' : ''}${d.charm ? '・魅了' : ''}${d.aud ? '・観客' : ''}${d.token ? '・財宝トークン' : ''}${d.echo ? '・エコー' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
+    <div class="ctype">${tl}${d.stance ? '・構え' : ''}${d.part ? '・部品' : ''}${d.elf ? '・エルフ' : ''}${d.weather ? '・風化' : ''}${d.undead ? '・亡者' : ''}${d.treasure ? '・財宝' : ''}${d.charm ? '・魅了' : ''}${d.aud ? '・観客' : ''}${d.token ? '・財宝トークン' : ''}${d.topping ? '・トッピング' : ''}${d.echo ? '・エコー' : ''}${d.moon ? (d.moon === 'full' ? '・満月型' : '・新月型') : ''}${d.burn ? '・自傷' : ''}${d.unblockable ? '・防御不能' : ''}${d.hero ? '・' + HEROES[d.hero].short : ''}</div>
     <div class="ctext">${fmt(d.text)}</div><div class="stats">${stats}</div>
     ${opt.sealed ? `<div class="seal"><span>${G && G.tempSeals && G.tempSeals.has(c.uid) ? '石化' : '威圧'}</span></div>` : ''}${opt.extra || ''}</div>`;
 }
@@ -1974,6 +2080,9 @@ function panelHTML(p, pos = '') {
   if (p.investNext) extra.push(`<span class="coin">📈投資 +${p.investNext}</span>`);
   if (p.heroId === 'golem' && p.blockedAccum) extra.push(`<span class="mana">🛡防御計 ${p.blockedAccum}</span>`);
   if (p.heroId === 'pirate') { extra.push(`<span class="abyss">💀亡者 <b>${graveZombies(p).length}</b></span>`); extra.push(`<span class="coin">💰財宝 <b>${flatCards(p.discard).filter(c => D(c).treasure).length}</b></span>`); if (p.anchor && active) extra.push(`<span class="mana"><b>⚓錨上げ中</b></span>`); }
+  if (p.heroId === 'knight') { extra.push(`<span class="holy">${p.mounted ? '🐴騎乗中' : '<span style="color:#ff8a8a">落馬中</span>'}</span>`); if (p.oath) extra.push(`<span class="holy"><b>📜${OATHS[p.oath].name}</b></span>`); }
+  if (p.chianti) extra.push(`<span class="heal">🍷相手の攻撃-${p.chianti}</span>`);
+  if (p.defLimit) extra.push(`<span class="rage">🤺防御は1枚まで</span>`);
   if (p.ward) extra.push(`<span class="holy">🛡️古代の盾 -${p.ward}</span>`);
   if (p.heroId === 'alien' && active) extra.push(`<span class="mana">🔁使用 <b>${p.cardsThisTurn}</b>枚${p.echoMul > 1 ? '・<b>共鳴中</b>' : ''}</span>`);
   if (p.heroId === 'oiran') { if (p.keisei && active) extra.push(`<span class="rage" style="color:#ff8ac0"><b>🌸傾城中</b></span>`); if (p.charmBonus && active) extra.push(`<span class="rage" style="color:#ff8ac0">💔魅了+${p.charmBonus}</span>`); }
@@ -1981,7 +2090,7 @@ function panelHTML(p, pos = '') {
   if (p.heroId === 'samurai' && p.wCoinBonus && active) extra.push(`<span class="coin">🪙ヒット時+${1 + p.wCoinBonus}</span>`);
   const abils = h.actives.map((ab, k) => `<button class="abil" title="${ab.text}" ${main && ab.can(p) ? '' : 'disabled'} onclick="useActive(${p.idx},${k})">${ab.name}<small>${ab.costNow ? ab.costNow(p) : ab.cost}</small></button>`).join('');
   const tot = p.maxHp + p.shield;
-  return `<div class="panel ${pos} ${active ? 'active' : ''} ${p.field.length || p.wInst || p.band.length ? 'hasfield' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
+  return `<div class="panel ${pos} ${active ? 'active' : ''} ${p.field.length || p.wInst || p.band.length || p.pizza ? 'hasfield' : ''}" id="panel-${p.idx}" style="--pc:${h.color}">
     <div class="info">
       <div class="hrow"><div class="portrait" onclick="heroInfo(${p.idx})" title="クリックで詳細">${h.art}</div>
         <div class="hname"><span class="pl">${plabel(p)}</span>${h.short}${cpu ? `<span class="cputag">CPU ${['', 'やさしい', 'ふつう', 'つよい'][lvOf(p)]}</span>` : ''}<small>${h.title}</small></div></div>
@@ -1991,7 +2100,7 @@ function panelHTML(p, pos = '') {
       <div class="abils">${abils}</div>
       <div class="passive" style="font-size:10.5px;color:#aaa;line-height:1.35" title="${h.passive}">${h.passive}</div>
     </div>
-    ${p.field.length || p.wInst || p.band.length ? `<div class="field">${p.wInst ? weaponHTML(p, main) : ''}${p.band.map((m, i) => bandHTML(p, i, main)).join('')}${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
+    ${p.field.length || p.wInst || p.band.length || p.pizza ? `<div class="field">${p.pizza ? pizzaHTML(p, main) : ''}${p.wInst ? weaponHTML(p, main) : ''}${p.band.map((m, i) => bandHTML(p, i, main)).join('')}${p.field.map(dn => dinoHTML(p, dn, main)).join('')}</div>` : ''}
     <div class="hand">${hand}</div></div>`;
 }
 function centerHTML() {
@@ -2135,7 +2244,7 @@ function netPump() {
 }
 // ズレ検出：ターン開始時の状態を要約して送り合う
 function netHash() {
-  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor, p.aud, p.keisei, p.ward, p.cardsThisTurn, p.field.map(d => d.muts.join())])]);
+  const s = JSON.stringify([G.round, G.turn, UID, G.trash.length, G.players.map(p => [p.hp, p.mana, p.coins, p.shield, p.hand.map(c => c.uid), p.deck.map(c => c.uid), flatCards(p.discard).length, p.field.map(d => [d.uid, d.hp]), p.wAtk, p.anchor, p.aud, p.keisei, p.ward, p.cardsThisTurn, p.field.map(d => d.muts.join()), p.mounted, p.oath, p.pizza && p.pizza.tops.join()])]);
   let h = 0; for (let i = 0; i < s.length; i++) h = (Math.imul(h, 31) + s.charCodeAt(i)) | 0; return h;
 }
 function netCheck() {
