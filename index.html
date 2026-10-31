@@ -895,9 +895,9 @@ const HEROES = {
     actives: [{ name: '地鳴り', cost: 'マナ2', text: '相手の手札を1枚まで【石化】（相手のターン開始時に解ける威圧・1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 2; await sealMore(p, opp(p), 1, true); } }] },
-  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 15, diff: '★☆☆', sig: 'lightsword',
+  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 16, diff: '★☆☆', sig: 'lightsword',
     pool: ['paladin', 'judgement', 'sanctuary', 'wrath', 'wing', 'archangel', 'holylance', 'healinglight', 'halo'], draft: ['lightsword', 'bless', 'radiant', 'feather', 'purge'],
-    passive: '【聖なる盾】HPより先に減る追加HP。自分のターン開始時に消える。ターン終了時に聖なる盾+2。',
+    passive: '【聖なる盾】HPより先に減る追加HP。自分のターン開始時に消える。ターン終了時に聖なる盾+3。',
     style: '攻撃のヒットや防御で聖なる盾を張り、相手ターンを耐える。盾を力に変える「審判の光」も。',
     actives: [{ name: '祈り', cost: 'マナ2', text: '聖なる盾+4（1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
@@ -1670,7 +1670,7 @@ function sealClick(uid) {
 function skipSeal() { if (G.phase === 'intimidate' && !G.busy) { G.phase = 'main'; render(); } }
 async function endTurn() {
   const p = cur();
-  if (p.heroId === 'angel') gainShield(p, 2);
+  if (p.heroId === 'angel') gainShield(p, 3);
   p.wolfForm = false; p.inferno = false;
   const tokens = p.hand.filter(c => D(c).token);
   if (tokens.length) log(`使わなかった財宝${tokens.length}つは消えた`, 'sys');
