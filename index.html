@@ -358,7 +358,7 @@ const RAGE_CAP = 3;
 // 1回の攻撃に出せる防御カードの上限（守りすぎによる膠着を防ぐ）
 let MAX_DEF = 2;
 // 瘴気：長期戦を終わらせる時計。ラウンド10から毎ターン開始時にダメージ（3ラウンドごとに+1）
-const MIASMA_START = 10;
+const MIASMA_START = 15;
 const miasma = () => G.round < MIASMA_START ? 0 : 1 + Math.floor((G.round - MIASMA_START) / 3);
 
 // ================= card database =================
@@ -517,22 +517,22 @@ const CARDS = {
     play: async x => { await heal(x.p, 3); await trashFromHand(x.p, 1); } },
 
   // ---- 熾天使セラフィナ ----
-  lightsword: { hero: 'angel', name: '光の剣', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '⚔️', text: '【ヒット時】聖なる盾+2', hit: async x => gainShield(x.p, 2) },
-  bless: { hero: 'angel', name: '祝福', type: 'skill', cost: 0, def: 1, dc: 0, price: 2, art: '🙏', text: '【使用時】聖なる盾+1', play: async x => gainShield(x.p, 1) },
-  feather: { hero: 'angel', name: '光の羽根', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🪶', text: '【防御時】聖なる盾+1', defend: async x => gainShield(x.p, 1) },
-  wing: { hero: 'angel', name: '守護の翼', type: 'attack', cost: 1, atk: 1, def: 3, dc: 0, price: 3, art: '🕊️', text: '【防御時】聖なる盾+2', defend: async x => gainShield(x.p, 2) },
-  purge: { hero: 'angel', name: '浄化', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '💫', text: '【使用時】手札を1枚まで破棄。聖なる盾+1',
-    play: async x => { await trashFromHand(x.p, 1); gainShield(x.p, 1); } },
+  lightsword: { hero: 'angel', name: '光の剣', type: 'attack', cost: 2, atk: 3, def: 2, dc: 0, price: 2, art: '⚔️', text: '【ヒット時】聖なる盾+3', hit: async x => gainShield(x.p, 3) },
+  bless: { hero: 'angel', name: '祝福', type: 'skill', cost: 1, def: 1, dc: 0, price: 2, art: '🙏', text: '【使用時】聖なる盾+3', play: async x => gainShield(x.p, 3) },
+  feather: { hero: 'angel', name: '光の羽根', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🪶', text: '【防御時】聖なる盾+2', defend: async x => gainShield(x.p, 2) },
+  wing: { hero: 'angel', name: '守護の翼', type: 'attack', cost: 1, atk: 1, def: 3, dc: 0, price: 3, art: '🕊️', text: '【防御時】聖なる盾+3', defend: async x => gainShield(x.p, 3) },
+  purge: { hero: 'angel', name: '浄化', type: 'skill', cost: 1, def: 1, dc: 0, price: 3, art: '💫', text: '【使用時】手札を1枚まで破棄。聖なる盾+2',
+    play: async x => { await trashFromHand(x.p, 1); gainShield(x.p, 2); } },
   judgement: { hero: 'angel', name: '審判の光', type: 'attack', cost: 3, atk: 4, def: 1, dc: 0, price: 5, art: '☀️', text: '【使用時】聖なる盾の値だけATK+（最大+5）',
     play: async x => { x.atk += Math.min(5, x.p.shield); } },
-  sanctuary: { hero: 'angel', name: '聖域', type: 'skill', cost: 2, def: 2, dc: 0, price: 4, art: '⛪', text: '【使用時】聖なる盾+4', play: async x => gainShield(x.p, 4) },
-  wrath: { hero: 'angel', name: '天罰', type: 'attack', cost: 4, atk: 6, def: 1, dc: 0, price: 6, art: '🌩️', text: '【ヒット時】聖なる盾+3', hit: async x => gainShield(x.p, 3) },
+  sanctuary: { hero: 'angel', name: '聖域', type: 'skill', cost: 2, def: 2, dc: 0, price: 4, art: '⛪', text: '【使用時】聖なる盾+6', play: async x => gainShield(x.p, 6) },
+  wrath: { hero: 'angel', name: '天罰', type: 'attack', cost: 4, atk: 6, def: 1, dc: 0, price: 6, art: '🌩️', text: '【ヒット時】聖なる盾+4', hit: async x => gainShield(x.p, 4) },
   radiant: { hero: 'angel', name: '輝く刃', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '🔆', text: '【使用時】聖なる盾があればATK+3',
     play: async x => { if (x.p.shield > 0) x.atk += 3; } },
-  paladin: { hero: 'angel', name: '聖騎士の突撃', type: 'attack', cost: 3, atk: 4, def: 2, dc: 0, price: 5, art: '🏇', text: '【使用時】聖なる盾があればATK+3\n【ヒット時】聖なる盾+2',
-    play: async x => { if (x.p.shield > 0) x.atk += 3; }, hit: async x => gainShield(x.p, 2) },
-  archangel: { hero: 'angel', name: '大天使の降臨', type: 'attack', cost: 5, atk: 7, def: 2, dc: 0, price: 7, art: '👼', text: '【使用時】聖なる盾+3\n【ヒット時】HP2回復',
-    play: async x => gainShield(x.p, 3), hit: async x => heal(x.p, 2) },
+  paladin: { hero: 'angel', name: '聖騎士の突撃', type: 'attack', cost: 3, atk: 4, def: 2, dc: 0, price: 5, art: '🏇', text: '【使用時】聖なる盾があればATK+3\n【ヒット時】聖なる盾+3',
+    play: async x => { if (x.p.shield > 0) x.atk += 3; }, hit: async x => gainShield(x.p, 3) },
+  archangel: { hero: 'angel', name: '大天使の降臨', type: 'attack', cost: 5, atk: 7, def: 2, dc: 0, price: 7, art: '👼', text: '【使用時】聖なる盾+4\n【ヒット時】HP2回復',
+    play: async x => gainShield(x.p, 4), hit: async x => heal(x.p, 2) },
 
   // ---- 機工士ギア ----
   gear: { hero: 'mech', name: '歯車', type: 'attack', cost: 1, atk: 2, def: 1, dc: 0, price: 2, art: '⚙️', text: '【部品】合成するとATK+1・使用時1枚引く', part: { atk: 1, draw: 1 } },
@@ -677,9 +677,9 @@ const CARDS = {
     play: async x => { await heal(x.p, 2); x.p.storedAtk += 3; } },
   holylance: { hero: 'angel', name: '聖なる槍', type: 'attack', cost: 2, atk: 3, def: 1, dc: 0, price: 4, art: '🔱', text: '【使用時】聖なる盾が2以上あれば、盾を2消費してATK+3',
     play: async x => { if (x.p.shield >= 2) { x.p.shield -= 2; x.atk += 3; log('聖なる盾を力に変えた（ATK+3）', 'holy'); } } },
-  healinglight: { hero: 'angel', heal: true, name: '癒しの光', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '💡', text: '【使用時】HP2回復。聖なる盾+1',
-    play: async x => { await heal(x.p, 2); gainShield(x.p, 1); } },
-  halo: { hero: 'angel', name: '光輪の守り', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 4, art: '😇', text: '【防御時】聖なる盾+3', defend: async x => gainShield(x.p, 3) },
+  healinglight: { hero: 'angel', heal: true, name: '癒しの光', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '💡', text: '【使用時】HP2回復。聖なる盾+2',
+    play: async x => { await heal(x.p, 2); gainShield(x.p, 2); } },
+  halo: { hero: 'angel', name: '光輪の守り', type: 'attack', cost: 1, atk: 1, def: 4, dc: 0, price: 4, art: '😇', text: '【防御時】聖なる盾+4', defend: async x => gainShield(x.p, 4) },
   bolt: { hero: 'mech', name: 'ボルト', type: 'skill', cost: 0, def: 1, dc: 0, price: 3, art: '🔩', text: '【使用時】1枚引く\n【部品】合成するとATK+1', part: { atk: 1 }, play: async x => draw(x.p, 1) },
   rocketpunch: { hero: 'mech', name: 'ロケットパンチ', type: 'attack', cost: 3, atk: 5, def: 1, dc: 0, price: 5, art: '🚀', text: '【部品】合成するとATK+2', part: { atk: 2 } },
   drone: { hero: 'mech', heal: true, name: '修理ドローン', type: 'skill', cost: 1, def: 2, dc: 0, price: 3, art: '🛸', text: '【使用時】HP2回復。コイン+1', play: async x => { await heal(x.p, 2); gainCoins(x.p, 1); } },
@@ -895,13 +895,13 @@ const HEROES = {
     actives: [{ name: '地鳴り', cost: 'マナ2', text: '相手の手札を1枚まで【石化】（相手のターン開始時に解ける威圧・1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
       use: async p => { p.used.a0 = 1; p.mana -= 2; await sealMore(p, opp(p), 1, true); } }] },
-  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 20, diff: '★☆☆', sig: 'lightsword',
+  angel: { name: '熾天使セラフィナ', short: 'セラフィナ', title: '光の盾の守護天使', art: '👼', color: '#ffe680', hp: 15, diff: '★☆☆', sig: 'lightsword',
     pool: ['paladin', 'judgement', 'sanctuary', 'wrath', 'wing', 'archangel', 'holylance', 'healinglight', 'halo'], draft: ['lightsword', 'bless', 'radiant', 'feather', 'purge'],
     passive: '【聖なる盾】HPより先に減る追加HP。自分のターン開始時に消える。ターン終了時に聖なる盾+2。',
     style: '攻撃のヒットや防御で聖なる盾を張り、相手ターンを耐える。盾を力に変える「審判の光」も。',
-    actives: [{ name: '祈り', cost: 'マナ2', text: '聖なる盾+3（1ターン1回）',
+    actives: [{ name: '祈り', cost: 'マナ2', text: '聖なる盾+4（1ターン1回）',
       can: p => p.mana >= 2 && !p.used.a0,
-      use: async p => { p.used.a0 = 1; p.mana -= 2; gainShield(p, 3); } }] },
+      use: async p => { p.used.a0 = 1; p.mana -= 2; gainShield(p, 4); } }] },
   mech: { name: '機工士ギア', short: 'ギア', title: 'からくり仕掛けの発明家', art: '🤖', color: '#e08a2c', hp: 26, diff: '★★★', sig: 'gear',
     pool: ['drill', 'jet', 'armor', 'scrap', 'coil', 'titan', 'bolt', 'rocketpunch', 'drone'], draft: ['gear', 'screw', 'wrench', 'armor', 'scrap'],
     passive: '【精密工作】合成したカードはコスト-1・ATK+2。【部品】カードは合成するとさらにボーナスを得る。',
